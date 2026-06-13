@@ -6,6 +6,7 @@ import "dotenv/config";
 import nodemailer from "nodemailer";
 
 import { opcionesTransporteSmtp, remitenteCorreo } from "../lib/email-deliverability";
+import { adjuntosLogoEmail, logoEmailHtml } from "../lib/email-logo";
 import { site } from "../lib/site";
 
 const destino = process.argv[2]?.trim();
@@ -32,7 +33,8 @@ try {
     to: destino,
     subject: `Prueba — ${site.nombreCompleto}`,
     text: "Prueba de correo transaccional Essenza.",
-    html: "<p>Si ves esto, SMTP funciona correctamente.</p>",
+    html: `<div style="text-align:center;font-family:Arial,sans-serif;">${logoEmailHtml()}<p>Si ves el logo, el correo funciona correctamente.</p></div>`,
+    attachments: adjuntosLogoEmail(),
   });
 
   console.log(`Correo de prueba enviado a ${destino}`);

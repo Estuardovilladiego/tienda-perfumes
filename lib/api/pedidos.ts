@@ -195,8 +195,14 @@ async function notificarPedidoPorEmail(
   };
 
   try {
-    await enviarConfirmacionPedido(payload);
-    await enviarAvisoPedidoAdmin(payload);
+    const cliente = await enviarConfirmacionPedido(payload);
+    const admin = await enviarAvisoPedidoAdmin(payload);
+    if (!cliente.enviado || !admin.enviado) {
+      console.warn("[email] Resultado envío pedido", pedido.numero, {
+        cliente,
+        admin,
+      });
+    }
   } catch (e) {
     console.error("[email] No se pudo enviar confirmación de pedido:", e);
   }

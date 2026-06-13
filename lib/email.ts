@@ -8,6 +8,7 @@ import {
   opcionesTransporteSmtp,
   remitenteCorreo,
   replyToCorreo,
+  smtpEstaConfigurado,
 } from "@/lib/email-deliverability";
 import { adjuntosLogoEmail } from "@/lib/email-logo";
 import { htmlPedidoEmail, textoPedidoEmail, type PedidoEmailData } from "@/lib/email-pedido-template";
@@ -17,7 +18,7 @@ import { site } from "@/lib/site";
 export type { PedidoEmailData };
 
 function smtpConfigurado() {
-  return Boolean(process.env.SMTP_USER?.trim() && process.env.SMTP_PASS?.trim());
+  return smtpEstaConfigurado();
 }
 
 function crearTransport() {

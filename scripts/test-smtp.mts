@@ -5,15 +5,13 @@ import "dotenv/config";
 
 import nodemailer from "nodemailer";
 
-import { adjuntosLogoEmail } from "../lib/email-logo";
-import { htmlPedidoEmail, type PedidoEmailData } from "../lib/email-pedido-template";
+import { opcionesTransporteSmtp, remitenteCorreo } from "../lib/email-deliverability";
 import { site } from "../lib/site";
 
 const destino = process.argv[2]?.trim();
-const user = process.env.SMTP_USER?.trim();
-const pass = process.env.SMTP_PASS?.trim();
+const opciones = opcionesTransporteSmtp();
 
-if (!user || !pass) {
+if (!opciones.auth.user || !opciones.auth.pass) {
   console.error("Falta SMTP_USER o SMTP_PASS en .env");
   process.exit(1);
 }
@@ -23,39 +21,18 @@ if (!destino) {
   process.exit(1);
 }
 
-const transport = nodemailer.createTransport({
-  host: process.env.SMTP_HOST?.trim() || "smtp.gmail.com",
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: false,
-  auth: { user, pass },
-});
-
-const demo: PedidoEmailData = {
-  numero: "ESS-TEST-001",
-  nombre: "Cliente prueba",
-  email: destino,
-  telefono: "3001234567",
-  ciudad: "Barranquilla",
-  direccion: "Calle 72 #45-10",
-  metodoPago: "Nequi",
-  total: 230000,
-  items: [
-    { nombre: "Asad", volumen: "100 ML", cantidad: 1, precioUnitario: 120000 },
-    { nombre: "Yara", volumen: "100 ML", cantidad: 1, precioUnitario: 110000 },
-  ],
-};
+const transport = nodemailer.createTransport(opciones);
 
 try {
   await transport.verify();
   console.log("Conexión SMTP OK");
 
   await transport.sendMail({
-    from: process.env.SMTP_FROM?.trim() || `Essenza <${user}>`,
+    from: remitenteCorreo(),
     to: destino,
-    subject: `Prueba logo — ${site.nombreCompleto}`,
-    text: "Prueba de confirmación con logo en el encabezado.",
-    html: htmlPedidoEmail(demo, "cliente"),
-    attachments: adjuntosLogoEmail(),
+    subject: `Prueba — ${site.nombreCompleto}`,
+    text: "Prueba de correo transaccional Essenza.",
+    html: "<p>Si ves esto, SMTP funciona correctamente.</p>",
   });
 
   console.log(`Correo de prueba enviado a ${destino}`);

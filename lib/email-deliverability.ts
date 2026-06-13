@@ -76,6 +76,11 @@ export function advertenciasEntregaCorreo(): string[] {
   return avisos;
 }
 
+function smtpPass() {
+  // Gmail: la contraseña de aplicación debe ir sin espacios (16 caracteres).
+  return process.env.SMTP_PASS?.trim().replace(/\s+/g, "") ?? "";
+}
+
 export function opcionesTransporteSmtp() {
   const host = process.env.SMTP_HOST?.trim() || "smtp.gmail.com";
   const port = Number(process.env.SMTP_PORT) || 587;
@@ -88,10 +93,14 @@ export function opcionesTransporteSmtp() {
     requireTLS: !secure && port === 587,
     auth: {
       user: smtpUser(),
-      pass: process.env.SMTP_PASS?.trim() ?? "",
+      pass: smtpPass(),
     },
     tls: {
       minVersion: "TLSv1.2" as const,
     },
   };
+}
+
+export function smtpEstaConfigurado() {
+  return Boolean(smtpUser() && smtpPass());
 }

@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// Género / tipo: Hombre, Mujer, Unisex, Árabes (un producto puede tener varias)
+model Categoria {
+  id        Int                 @id @default(autoincrement())
+  nombre    String              @unique
+  slug      String              @unique
+  imagen    String?             @db.Text
+  orden     Int                 @default(0)
+  productos ProductoCategoria[]
+}
+
+model ProductoCategoria {
+  productoId  Int
+  categoriaId Int
+  producto    Producto  @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  categoria   Categoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+
+  @@id([productoId, categoriaId])
+  @@index([categoriaId])
+  @@map("producto_categoria")
+}
+
+model FamiliaOlfativa {
+  id          Int        @id @default(autoincrement())
+  nombre      String     @unique
+  slug        String     @unique
+  descripcion String?    @db.Text
+  productos   Producto[]
+}
+
+model Marca {
+  id        Int        @id @default(autoincrement())
+  nombre    String     @unique
+  slug      String     @unique
+  productos Producto[]
+}
+
+model Producto {
+  id             Int                 @id @default(autoincrement())
+  nombre         String
+  descripcion    String              @db.Text
+  precio         Int
+  precioAnterior Int?
+  imagen         String              @db.Text
+  imagenes       Json?
+  volumen        String              @default("100 ML")
+  stock          Int                 @default(1)
+  sku            String?             @unique
+  destacado      Boolean             @default(false)
+  esNuevo        Boolean             @default(false)
+  enOferta       Boolean             @default(false)
+  activo         Boolean             @default(true)
+  familiaId      Int?
+  marcaId        Int?
+  familia        FamiliaOlfativa?    @relation(fields: [familiaId], references: [id])
+  marca          Marca?              @relation(fields: [marcaId], references: [id])
+  categorias     ProductoCategoria[]
+  notasSalida    String?             @db.Text
+  notasCorazon   String?             @db.Text
+  notasFondo     String?             @db.Text
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([activo, destacado])
+  @@index([activo, esNuevo])
+  @@index([activo, enOferta])
+  @@index([familiaId])
+  @@index([marcaId])
+  pedidoItems          PedidoItem[]
+  inventarioMovimientos InventarioMovimiento[]
+}
+
+enum EstadoPedido {
+  pendiente
+  confirmado
+  preparando
+  enviado
+  entregado
+  cancelado
+}
+
+model Pedido {
+  id        Int          @id @default(autoincrement())
+  numero    String       @unique
+  estado    EstadoPedido @default(pendiente)
+  nombre    String
+  telefono  String
+  email     String?
+  ciudad    String       @default("Barranquilla, Colombia")
+  direccion String       @default("")
+  metodoPago String      @default("WhatsApp")
+  notas     String?      @db.Text
+  subtotal  Int
+  recargoFinanciacion Int @default(0)
+  total     Int
+  items     PedidoItem[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([estado])
+  @@index([createdAt])
+}
+
+model PedidoItem {
+  id             Int      @id @default(autoincrement())
+  pedidoId       Int
+  productoId     Int
+  nombre         String
+  imagen         String?  @db.Text
+  volumen        String?
+  cantidad       Int
+  precioUnitario Int
+  pedido         Pedido   @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  producto       Producto @relation(fields: [productoId], references: [id])
+
+  @@index([pedidoId])
+}
+
+model SuscriptorNewsletter {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model InventarioMovimiento {
+  id             Int      @id @default(autoincrement())
+  productoId     Int
+  tipo           String
+  cantidad       Int
+  stockAnterior  Int
+  stockNuevo     Int
+  motivo         String?  @db.Text
+  createdAt      DateTime @default(now())
+  producto       Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+
+  @@index([productoId])
+  @@index([createdAt])
+}

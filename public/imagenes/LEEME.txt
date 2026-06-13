@@ -1,0 +1,18 @@
+Coloca aquí las fotos de cada perfume con el nombre indicado en lib/catalogo-data.ts.
+
+
+
+Ejemplos:
+
+  mandarin-sky.jpg
+
+  khamrah.jpg
+
+  dior-sauvage.jpg
+
+
+
+Mientras no subas las fotos, la tienda muestra un placeholder automático.
+
+Puedes reemplazar logo-essenza.svg en public/ por tu logo real cuando lo tengas.
+

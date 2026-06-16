@@ -5,7 +5,7 @@ import {
 } from "@/lib/metodos-pago";
 
 /** Porcentaje aplicado sobre el subtotal con Sistecredito o Addi. */
-export const RECARGO_FINANCIACION_PORCENTAJE = 20;
+export const RECARGO_FINANCIACION_PORCENTAJE = 15;
 
 export const METODOS_RECARGO_FINANCIACION = ["sistecredito", "addi"] as const satisfies readonly MetodoPagoId[];
 
@@ -24,6 +24,10 @@ export function metodoPagoIdNormalizado(metodoPago: string): MetodoPagoId | null
 export function aplicaRecargoFinanciacion(metodoPago: string): boolean {
   const id = metodoPagoIdNormalizado(metodoPago);
   return id !== null && (METODOS_RECARGO_FINANCIACION as readonly string[]).includes(id);
+}
+
+export function esPagoGuiadoWhatsApp(metodoPago: string): boolean {
+  return aplicaRecargoFinanciacion(metodoPago);
 }
 
 export function calcularRecargoFinanciacion(subtotal: number): number {

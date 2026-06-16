@@ -4,6 +4,7 @@ import PaymentCuentaBox from "@/app/components/checkout/PaymentCuentaBox";
 import CheckoutResumenTotales from "@/app/components/checkout/CheckoutResumenTotales";
 import type { MetodoPagoId } from "@/lib/metodos-pago";
 import { instruccionesPago, labelMetodoPago, numeroPedidoVisible } from "@/lib/metodos-pago";
+import { esPagoGuiadoWhatsApp } from "@/lib/recargo-financiacion";
 
 type Props = {
   pedidoId: number;
@@ -39,6 +40,7 @@ export default function CheckoutConfirmacion({
   onCerrar,
 }: Props) {
   const numeroVisible = numeroPedidoVisible(numeroPedido, pedidoId);
+  const pagoGuiadoWhatsApp = esPagoGuiadoWhatsApp(metodoPago);
 
   return (
     <div className="checkout-gracias -mx-1 px-1 pb-2">
@@ -47,9 +49,28 @@ export default function CheckoutConfirmacion({
           Pedido registrado con éxito
         </h2>
 
+        {pagoGuiadoWhatsApp ? (
+          <div className="mb-4 rounded-xl border border-[#25D366]/35 bg-[#25D366]/10 px-4 py-3 text-left">
+            <p className="text-sm font-semibold text-[#128C7E]">Te guiamos por WhatsApp</p>
+            <p className="mt-1 text-xs leading-relaxed text-[#1a5c4a]">
+              Para completar tu pago con {labelMetodoPago(metodoPago)}, escríbenos por WhatsApp.
+              Te enviamos el enlace y los pasos.
+            </p>
+          </div>
+        ) : null}
+
         <p className="checkout-gracias-text">
-          Envíanos por WhatsApp tu{" "}
-          <strong>número de pedido: {numeroVisible}</strong> y el comprobante de pago.
+          {pagoGuiadoWhatsApp ? (
+            <>
+              Tu pedido <strong>{numeroVisible}</strong> quedó registrado. Toca el botón de abajo
+              para abrir WhatsApp y te guiamos con el pago.
+            </>
+          ) : (
+            <>
+              Envíanos por WhatsApp tu{" "}
+              <strong>número de pedido: {numeroVisible}</strong> y el comprobante de pago.
+            </>
+          )}
           {email ? (
             correoEnviado ? (
               <>
@@ -77,7 +98,7 @@ export default function CheckoutConfirmacion({
           </span>
         </div>
 
-        <PaymentCuentaBox metodoId={metodoPago} />
+        {!pagoGuiadoWhatsApp ? <PaymentCuentaBox metodoId={metodoPago} /> : null}
 
         <ul className="mt-4 space-y-1.5 rounded-xl border border-border/70 bg-white/80 p-3.5 text-left text-[11px] leading-relaxed text-muted">
           {instruccionesPago(metodoPago, total, numeroPedido).map((linea) => (
@@ -87,7 +108,7 @@ export default function CheckoutConfirmacion({
 
         <button type="button" onClick={onWhatsApp} className="checkout-gracias-whatsapp">
           <IconWhatsApp />
-          Enviar mensaje por WhatsApp
+          {pagoGuiadoWhatsApp ? "Continuar por WhatsApp" : "Enviar mensaje por WhatsApp"}
         </button>
       </div>
 

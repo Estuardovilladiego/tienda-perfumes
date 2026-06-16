@@ -48,7 +48,7 @@ async function main() {
   assert("Validar carrito", validar.data?.valido === true, `total ${validar.data?.total}`);
 
   const subtotal = Number(validar.data?.total ?? 0);
-  const recargoAddi = Math.round(subtotal * 0.2);
+  const recargoAddi = Math.round(subtotal * 0.15);
   const totalAddi = subtotal + recargoAddi;
 
   const pedidoAddi = await request("POST", "/api/pedidos", {

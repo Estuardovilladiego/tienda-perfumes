@@ -10,7 +10,7 @@ import {
   labelMetodoPago,
   numeroPedidoVisible,
 } from "@/lib/metodos-pago";
-import { RECARGO_FINANCIACION_PORCENTAJE } from "@/lib/recargo-financiacion";
+import { RECARGO_FINANCIACION_PORCENTAJE, esPagoGuiadoWhatsApp } from "@/lib/recargo-financiacion";
 import { site } from "@/lib/site";
 
 export type ItemWhatsAppPedido = {
@@ -154,10 +154,15 @@ export function mensajeEssenzaACliente(info: PedidoWhatsAppInfo & { total: numbe
 export function mensajeComprobanteWhatsApp(info: PedidoWhatsAppInfo & { total: number }) {
   const numero = numeroVisible(info);
   const fecha = formatFechaPedidoWhatsApp(info.fecha ?? new Date());
+  const metodoId = metodoPagoIdDesdeInfo(info.metodoPago);
+  const guiadoWhatsApp = metodoId ? esPagoGuiadoWhatsApp(metodoId) : false;
+
   const lineas: string[] = [
     `Hola *${site.nombreCompleto}*,`,
     "",
-    `Realicé mi pedido y adjunto comprobante de pago:`,
+    guiadoWhatsApp
+      ? `Registré mi pedido y quiero que me guíen por WhatsApp para pagar con *${labelMetodoPagoInfo(info.metodoPago)}*:`
+      : `Realicé mi pedido y adjunto comprobante de pago:`,
     "",
     `📋 *Pedido:* ${numero}`,
     `📅 *Fecha:* ${fecha}`,
@@ -192,7 +197,12 @@ export function mensajeComprobanteWhatsApp(info: PedidoWhatsAppInfo & { total: n
     lineas.push("", `🔖 *Referencia:* ${info.referenciaPago}`);
   }
 
-  lineas.push("", "Adjunto comprobante de pago.");
+  lineas.push(
+    "",
+    guiadoWhatsApp
+      ? "Quedo atento/a para que me guíen con el pago por WhatsApp. Gracias."
+      : "Adjunto comprobante de pago."
+  );
   return lineas.join("\n");
 }
 

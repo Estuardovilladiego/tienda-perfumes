@@ -35,7 +35,7 @@ export default function PaymentMethodPicker({ seleccionado, onSelect, total }: P
           {aplicaRecargoFinanciacion(metodo.id) ? (
             <p className="mt-1 text-[10px] leading-relaxed text-muted">
               Este método incluye un recargo del {RECARGO_FINANCIACION_PORCENTAJE}% sobre el
-              subtotal.
+              subtotal. Te guiamos por WhatsApp para completar el pago.
             </p>
           ) : null}
           <PaymentCuentaBox metodoId={metodo.id} compact />

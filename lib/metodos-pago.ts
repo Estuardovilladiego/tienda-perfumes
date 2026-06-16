@@ -251,14 +251,14 @@ export function instruccionesPago(metodoId: MetodoPagoId, total: number, numeroP
     }
     case "sistecredito":
       return [
-        `Solicita crédito Sistecredito por ${totalFmt}.`,
-        "Te contactaremos por WhatsApp con el link o pasos para aprobar el crédito.",
+        `Crédito Sistecredito por ${totalFmt} (incluye recargo de financiación).`,
+        "Te guiamos por WhatsApp con el link y los pasos para aprobar el crédito.",
         `Indica tu pedido: ${ref}.`,
       ];
     case "addi":
       return [
-        `Paga a cuotas con Addi — total ${totalFmt}.`,
-        "Te enviaremos por WhatsApp el enlace o instrucciones de Addi.",
+        `Pago a cuotas con Addi — total ${totalFmt} (incluye recargo de financiación).`,
+        "Te guiamos por WhatsApp con el enlace e instrucciones de Addi.",
         `Referencia del pedido: ${ref}.`,
       ];
     default:

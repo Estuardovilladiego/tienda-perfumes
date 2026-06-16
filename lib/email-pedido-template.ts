@@ -9,7 +9,7 @@ import {
   whatsappLinkCliente,
 } from "@/lib/format-pedido-whatsapp";
 import { formatPrecioCOP } from "@/lib/format-precio";
-import { RECARGO_FINANCIACION_PORCENTAJE } from "@/lib/recargo-financiacion";
+import { RECARGO_FINANCIACION_PORCENTAJE, esPagoGuiadoWhatsApp } from "@/lib/recargo-financiacion";
 import { cuentaMetodoPago, idMetodoPagoDesdeLabel } from "@/lib/metodos-pago";
 import { site, whatsappUrl } from "@/lib/site";
 
@@ -158,6 +158,8 @@ function bloqueDatosPagoEmail(pedido: PedidoEmailData) {
 
 function bloqueWhatsApp(pedido: PedidoEmailData, esAdmin: boolean) {
   const info = infoWhatsAppDesdePedido(pedido);
+  const metodoId = idMetodoPagoDesdeLabel(pedido.metodoPago);
+  const guiadoWhatsApp = metodoId ? esPagoGuiadoWhatsApp(metodoId) : false;
 
   if (esAdmin) {
     const link = whatsappLinkCliente(
@@ -185,11 +187,16 @@ function bloqueWhatsApp(pedido: PedidoEmailData, esAdmin: boolean) {
           <tr>
             <td style="padding:28px 32px;text-align:center;">
               <p style="margin:0 0 14px;font-size:13px;line-height:1.6;color:#666;font-family:Arial,sans-serif;">
-                Después de pagar, toca el botón para abrir WhatsApp con el mensaje listo.
-                Solo adjunta la captura o foto de tu comprobante y envía.
+                ${
+                  guiadoWhatsApp
+                    ? "Te guiamos por WhatsApp para completar el pago con " +
+                      esc(pedido.metodoPago) +
+                      ". Toca el botón para abrir el chat con tu pedido listo."
+                    : "Después de pagar, toca el botón para abrir WhatsApp con el mensaje listo. Solo adjunta la captura o foto de tu comprobante y envía."
+                }
               </p>
               <a href="${link}" style="display:inline-block;background:#25D366;color:#ffffff;text-decoration:none;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:14px 28px;border-radius:999px;">
-                Enviar comprobante por WhatsApp
+                ${guiadoWhatsApp ? "Continuar por WhatsApp" : "Enviar comprobante por WhatsApp"}
               </a>
               <p style="margin:14px 0 0;font-size:12px;color:#888;font-family:Arial,sans-serif;">
                 ${site.whatsappDisplay} · ${site.email}
@@ -202,9 +209,13 @@ export function htmlPedidoEmail(pedido: PedidoEmailData, variante: Variante = "c
   const logoHtml = logoEmailHtml();
   const esAdmin = variante === "admin";
   const titulo = esAdmin ? "Nuevo pedido recibido" : "¡Gracias por tu pedido!";
+  const metodoIdCliente = idMetodoPagoDesdeLabel(pedido.metodoPago);
+  const guiadoCliente = metodoIdCliente ? esPagoGuiadoWhatsApp(metodoIdCliente) : false;
   const intro = esAdmin
     ? `Se registró un pedido en la tienda. Revisa los detalles y confirma el pago con el cliente.`
-    : `Hola <strong style="color:#1a1a1a;">${esc(pedido.nombre)}</strong>, recibimos tu pedido. Te contactaremos por WhatsApp para confirmar el pago.`;
+    : guiadoCliente
+      ? `Hola <strong style="color:#1a1a1a;">${esc(pedido.nombre)}</strong>, recibimos tu pedido. <strong>Te guiamos por WhatsApp</strong> para completar el pago con ${esc(pedido.metodoPago)}.`
+      : `Hola <strong style="color:#1a1a1a;">${esc(pedido.nombre)}</strong>, recibimos tu pedido. Te contactaremos por WhatsApp para confirmar el pago.`;
 
   return `<!DOCTYPE html>
 <html lang="es">

@@ -94,6 +94,7 @@ export async function validarCarrito(
       subtotal: precio * cantidad,
       imagen: producto.imagen,
       volumen,
+      esDecant: enDecants && !!presentacionMl,
     });
   }
 

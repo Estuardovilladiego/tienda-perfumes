@@ -17,6 +17,7 @@ export type CarritoItemValidado = {
   subtotal: number;
   imagen: string;
   volumen: string;
+  esDecant?: boolean;
 };
 
 export type ValidarCarritoResponse = {

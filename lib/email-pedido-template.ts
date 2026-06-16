@@ -1,6 +1,7 @@
 import "server-only";
 
 import { logoEmailHtml } from "@/lib/email-logo";
+import { esLineaDecant } from "@/lib/decants";
 import {
   itemsEmailAWhatsApp,
   mensajeComprobanteWhatsApp,
@@ -29,6 +30,7 @@ export type PedidoEmailData = {
     volumen: string | null;
     cantidad: number;
     precioUnitario: number;
+    esDecant?: boolean;
   }[];
 };
 
@@ -69,6 +71,22 @@ function filasTotalesEmail(pedido: PedidoEmailData) {
   return filas.join("");
 }
 
+function detalleProductoEmail(item: PedidoEmailData["items"][number]) {
+  const esDecant = item.esDecant ?? esLineaDecant(item.volumen);
+  const vol = item.volumen?.trim() ?? "";
+  const volumenMl = esDecant ? vol.replace(/^Decant · /i, "") : vol;
+  const texto = volumenMl ? `${volumenMl} · Cant. ${item.cantidad}` : `Cant. ${item.cantidad}`;
+
+  if (!esDecant) {
+    return `<p style="margin:4px 0 0;font-size:12px;color:#8b7355;">${esc(texto)}</p>`;
+  }
+
+  return `<p style="margin:4px 0 0;font-size:12px;color:#8b7355;line-height:1.5;">
+            <span style="display:inline-block;margin-right:6px;padding:2px 8px;border-radius:999px;background:#faf6ef;border:1px solid #d4bc94;color:#8b6914;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;vertical-align:middle;">Decant</span>
+            ${esc(texto)}
+          </p>`;
+}
+
 function filasProductos(pedido: PedidoEmailData) {
   return pedido.items
     .map(
@@ -76,7 +94,7 @@ function filasProductos(pedido: PedidoEmailData) {
         <tr>
           <td style="padding:14px 12px;border-bottom:1px solid #efe6d8;${index % 2 === 1 ? "background:#faf6ef;" : "background:#ffffff;"}">
             <p style="margin:0;font-size:14px;font-weight:600;color:#1a1a1a;">${esc(item.nombre)}</p>
-            <p style="margin:4px 0 0;font-size:12px;color:#8b7355;">${item.volumen ? esc(item.volumen) : "—"} · Cant. ${item.cantidad}</p>
+            ${detalleProductoEmail(item)}
           </td>
           <td style="padding:14px 12px;border-bottom:1px solid #efe6d8;text-align:right;white-space:nowrap;${index % 2 === 1 ? "background:#faf6ef;" : "background:#ffffff;"}">
             <span style="font-size:14px;font-weight:600;color:#1a1a1a;">$${formatPrecioCOP(item.precioUnitario * item.cantidad)}</span>
@@ -314,10 +332,13 @@ export function htmlPedidoEmail(pedido: PedidoEmailData, variante: Variante = "c
 
 export function textoPedidoEmail(pedido: PedidoEmailData) {
   const items = pedido.items
-    .map(
-      (i) =>
-        `• ${i.nombre}${i.volumen ? ` (${i.volumen})` : ""} × ${i.cantidad} — $${formatPrecioCOP(i.precioUnitario * i.cantidad)}`
-    )
+    .map((i) => {
+      const esDecant = i.esDecant ?? esLineaDecant(i.volumen);
+      const vol = i.volumen?.trim() ?? "";
+      const volumen = esDecant ? `Decant · ${vol.replace(/^Decant · /i, "")}` : vol;
+      const sufijo = volumen ? ` (${volumen})` : "";
+      return `• ${i.nombre}${sufijo} × ${i.cantidad} — $${formatPrecioCOP(i.precioUnitario * i.cantidad)}`;
+    })
     .join("\n");
 
   const metodoId = idMetodoPagoDesdeLabel(pedido.metodoPago);

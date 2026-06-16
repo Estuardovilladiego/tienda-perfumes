@@ -72,9 +72,24 @@ export function resolverVolumenVenta(
     presentacionMl &&
     esPresentacionDecantValida(presentacionMl)
   ) {
-    return `${presentacionMl} ML`;
+    return etiquetaVolumenDecant(presentacionMl);
   }
   return producto.volumen;
+}
+
+/** Etiqueta unificada para carrito, pedidos, correo y WhatsApp. */
+export function etiquetaVolumenDecant(ml: number) {
+  return `Decant · ${ml} ML`;
+}
+
+export function esLineaDecant(volumen: string | null | undefined) {
+  return !!volumen && /^Decant · /i.test(volumen.trim());
+}
+
+export function detalleLineaPedido(volumen: string | null | undefined, cantidad: number) {
+  const vol = volumen?.trim();
+  if (!vol) return `Cant. ${cantidad}`;
+  return `${vol} · Cant. ${cantidad}`;
 }
 
 export function precioDesdeDecant(_producto: ProductoCatalogo) {

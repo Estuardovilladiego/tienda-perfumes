@@ -1,4 +1,5 @@
 import type { Producto } from "@/app/types/producto";
+import { esLineaDecant } from "@/lib/decants";
 import { formatPrecioCOP } from "@/lib/format-precio";
 import {
   type MetodoPagoId,
@@ -76,9 +77,16 @@ export function formatFechaPedidoWhatsApp(fecha: Date | string = new Date()) {
 
 function lineasProductos(items: ItemWhatsAppPedido[]) {
   return items.map((item) => {
-    const volumen = item.volumen ? ` (${item.volumen})` : "";
+    const esDecant = esLineaDecant(item.volumen);
+    const vol = item.volumen?.trim() ?? "";
+    const volumen = esDecant
+      ? `Decant · ${vol.replace(/^Decant · /i, "")}`
+      : vol
+        ? vol
+        : "";
+    const detalle = volumen ? ` (${volumen})` : "";
     const subtotal = formatPrecioCOP(item.precio * item.cantidad);
-    return `• ${item.nombre}${volumen} × ${item.cantidad} — $${subtotal}`;
+    return `• ${item.nombre}${detalle} × ${item.cantidad} — $${subtotal}`;
   });
 }
 

@@ -2,6 +2,7 @@ import type { CrearPedidoInput } from "@/lib/api/types";
 import { validarCarrito } from "@/lib/api/carrito";
 import { esModoDemoEstatico } from "@/lib/config";
 import { esMetodoPagoValido, labelMetodoPago } from "@/lib/metodos-pago";
+import { esLineaDecant } from "@/lib/decants";
 import { generarNumeroPedido } from "@/lib/pedido-numero";
 import {
   calcularTotalesPedido,
@@ -195,6 +196,7 @@ export async function notificarPedidoPorEmail(
       volumen: i.volumen,
       cantidad: i.cantidad,
       precioUnitario: i.precioUnitario,
+      esDecant: esLineaDecant(i.volumen),
     })),
   };
 

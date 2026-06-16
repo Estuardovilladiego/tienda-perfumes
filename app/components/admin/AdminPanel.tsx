@@ -205,6 +205,7 @@ export default function AdminPanel({
   const [productoModalOpen, setProductoModalOpen] = useState(false);
   const [categoriaForm, setCategoriaForm] = useState<any>(emptyCategory);
   const [categoriaEditId, setCategoriaEditId] = useState<number | null>(null);
+  const [categoriaModalOpen, setCategoriaModalOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -249,6 +250,31 @@ export default function AdminPanel({
     setProductoForm(emptyProduct);
   }
 
+  function closeCategoryModal() {
+    setCategoriaModalOpen(false);
+    setCategoriaEditId(null);
+    setCategoriaForm(emptyCategory);
+  }
+
+  function openCreateCategoryModal() {
+    setCategoriaEditId(null);
+    setCategoriaForm(emptyCategory);
+    setCategoriaModalOpen(true);
+    clearFeedback();
+  }
+
+  function openEditCategoryModal(c: any) {
+    setCategoriaEditId(c.id);
+    setCategoriaForm({
+      nombre: c.nombre,
+      slug: c.slug,
+      imagen: c.imagen || "",
+      orden: c.orden,
+    });
+    setCategoriaModalOpen(true);
+    clearFeedback();
+  }
+
   function openCreateProductModal() {
     setProductoEditId(null);
     setProductoForm(emptyProduct);
@@ -266,6 +292,7 @@ export default function AdminPanel({
   function switchTab(next: Tab) {
     clearFeedback();
     if (next !== "productos") closeProductModal();
+    if (next !== "categorias") closeCategoryModal();
     setTab(next);
   }
 
@@ -402,20 +429,13 @@ export default function AdminPanel({
       );
 
       if (editingId) {
-        setCategoriaEditId(saved.id);
-        setCategoriaForm({
-          nombre: saved.nombre,
-          slug: saved.slug,
-          imagen: saved.imagen || "",
-          orden: saved.orden,
-        });
         setCategorias((prev: any[]) => prev.map((c: any) => (c.id === saved.id ? saved : c)));
         setMessage("Categoría actualizada correctamente");
+        closeCategoryModal();
       } else {
-        setCategoriaEditId(null);
-        setCategoriaForm(emptyCategory);
         setCategorias((prev: any[]) => [...prev, saved]);
         setMessage("Categoría creada correctamente");
+        closeCategoryModal();
       }
 
       try {
@@ -444,10 +464,7 @@ export default function AdminPanel({
     try {
       await api(`/api/admin/categorias/${id}`, { method: "DELETE" });
       setMessage("Categoría eliminada");
-      if (categoriaEditId === id) {
-        setCategoriaEditId(null);
-        setCategoriaForm(emptyCategory);
-      }
+      if (categoriaEditId === id) closeCategoryModal();
       await reloadPanels(["categorias"]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo eliminar la categoría");
@@ -641,44 +658,37 @@ export default function AdminPanel({
           )}
 
           {tab === "categorias" && (
-            <div className="admin-split-layout admin-split-layout-form">
-              {categoriaEditId ? (
-                <AdminBackLink
-                  label="Volver al listado de categorías"
-                  onClick={() => {
-                    setCategoriaEditId(null);
-                    setCategoriaForm(emptyCategory);
-                    clearFeedback();
-                  }}
-                  className="admin-back-link-standalone"
-                />
-              ) : null}
-              <CategoryForm
-                form={categoriaForm}
-                setForm={setCategoriaForm}
-                editId={categoriaEditId}
-                onSubmit={saveCategory}
-                onCancel={() => {
-                  setCategoriaEditId(null);
-                  setCategoriaForm(emptyCategory);
-                }}
-                loading={loading}
-              />
+            <>
               <CategoryTable
                 categorias={categorias}
-                onEdit={(c: any) => {
-                  setCategoriaEditId(c.id);
-                  setCategoriaForm({
-                    nombre: c.nombre,
-                    slug: c.slug,
-                    imagen: c.imagen || "",
-                    orden: c.orden,
-                  });
-                  clearFeedback();
-                }}
+                onCreate={openCreateCategoryModal}
+                onEdit={openEditCategoryModal}
                 onDelete={deleteCategory}
               />
-            </div>
+              <AdminProductModal
+                open={categoriaModalOpen}
+                onClose={closeCategoryModal}
+                eyebrow="Gestión de categoría"
+                title={categoriaEditId ? categoriaForm.nombre || "Editar categoría" : "Nueva categoría"}
+                subtitle={
+                  categoriaEditId
+                    ? categoriaForm.slug || undefined
+                    : "Organiza el catálogo por familias de fragancias"
+                }
+              >
+                <CategoryForm
+                  form={categoriaForm}
+                  setForm={setCategoriaForm}
+                  editId={categoriaEditId}
+                  onSubmit={saveCategory}
+                  onCancel={closeCategoryModal}
+                  loading={loading}
+                  error={error}
+                  message={message}
+                  inModal
+                />
+              </AdminProductModal>
+            </>
           )}
 
           {tab === "inventario" && (
@@ -1172,7 +1182,17 @@ function ProductTable({ productos, categorias, onEdit, onCreate, onDelete }: any
   );
 }
 
-function CategoryForm({ form, setForm, editId, onSubmit, onCancel, loading }: any) {
+function CategoryForm({
+  form,
+  setForm,
+  editId,
+  onSubmit,
+  onCancel,
+  loading,
+  error = "",
+  message = "",
+  inModal = false,
+}: any) {
   const set = (key: string, value: any) => setForm((f: any) => ({ ...f, [key]: value }));
 
   function onNombreChange(value: string) {
@@ -1183,12 +1203,8 @@ function CategoryForm({ form, setForm, editId, onSubmit, onCancel, loading }: an
     }));
   }
 
-  return (
-    <form onSubmit={onSubmit} className="admin-card admin-form-stack">
-      <AdminSectionHeader
-        title={editId ? "Editar categoría" : "Crear categoría"}
-        subtitle="Organiza el catálogo por familias"
-      />
+  const fields = (
+    <>
       <AdminFieldInput
         label="Nombre"
         value={form.nombre}
@@ -1203,25 +1219,57 @@ function CategoryForm({ form, setForm, editId, onSubmit, onCancel, loading }: an
         folder="categorias"
       />
       <AdminFieldInput label="Orden" type="number" value={form.orden} onChange={(e) => set("orden", e.target.value)} />
-      <div className="admin-form-actions">
-        <button type="submit" className="admin-primary" disabled={loading}>
-          <Plus size={16} /> {editId ? "Guardar cambios" : "Crear categoría"}
-        </button>
-        {editId ? (
-          <button type="button" onClick={onCancel} className="admin-btn">
-            Cancelar
-          </button>
-        ) : null}
-      </div>
+    </>
+  );
+
+  const footer = (
+    <>
+      <Alert type="error">{error}</Alert>
+      <Alert type="success">{message}</Alert>
+      <button type="submit" className="admin-primary admin-btn-premium admin-primary-lg" disabled={loading}>
+        <Save size={16} /> {editId ? "Guardar cambios" : "Crear categoría"}
+      </button>
+      <button type="button" onClick={onCancel} className="admin-btn admin-btn-ghost">
+        Cancelar
+      </button>
+    </>
+  );
+
+  if (inModal) {
+    return (
+      <form onSubmit={onSubmit} className="admin-modal-form">
+        <div className="admin-modal-body">
+          <div className="admin-form-stack admin-form-modal">{fields}</div>
+        </div>
+        <div className="admin-modal-footer">{footer}</div>
+      </form>
+    );
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="admin-card admin-form-stack">
+      <AdminSectionHeader
+        title={editId ? "Editar categoría" : "Crear categoría"}
+        subtitle="Organiza el catálogo por familias"
+      />
+      {fields}
+      <div className="admin-form-footer admin-form-actions">{footer}</div>
     </form>
   );
 }
 
-function CategoryTable({ categorias, onEdit, onDelete }: any) {
+function CategoryTable({ categorias, onCreate, onEdit, onDelete }: any) {
   if (!categorias.length) {
     return (
       <div className="admin-card">
-        <AdminSectionHeader title="Categorías" />
+        <AdminSectionHeader
+          title="Categorías"
+          action={
+            <button type="button" onClick={onCreate} className="admin-primary admin-btn-premium admin-small">
+              <Plus size={14} /> Nueva categoría
+            </button>
+          }
+        />
         <p className="admin-empty-state">No hay categorías registradas.</p>
       </div>
     );
@@ -1229,7 +1277,15 @@ function CategoryTable({ categorias, onEdit, onDelete }: any) {
 
   return (
     <div className="admin-card admin-card-flush">
-      <AdminSectionHeader title="Categorías" subtitle={`${categorias.length} registradas`} />
+      <AdminSectionHeader
+        title="Categorías"
+        subtitle={`${categorias.length} registradas · crea o edita desde el modal`}
+        action={
+          <button type="button" onClick={onCreate} className="admin-primary admin-btn-premium admin-small">
+            <Plus size={14} /> Nueva categoría
+          </button>
+        }
+      />
       <AdminTableWrap minWidth={520}>
         <table className="admin-table">
           <thead>

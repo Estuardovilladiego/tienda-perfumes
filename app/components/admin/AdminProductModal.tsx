@@ -8,10 +8,18 @@ type Props = {
   onClose: () => void;
   title: string;
   subtitle?: string;
+  eyebrow?: string;
   children: ReactNode;
 };
 
-export default function AdminProductModal({ open, onClose, title, subtitle, children }: Props) {
+export default function AdminProductModal({
+  open,
+  onClose,
+  title,
+  subtitle,
+  eyebrow = "Gestión de producto",
+  children,
+}: Props) {
   useEffect(() => {
     if (!open) return;
     document.body.style.overflow = "hidden";
@@ -34,7 +42,7 @@ export default function AdminProductModal({ open, onClose, title, subtitle, chil
         <div className="admin-modal-panel">
           <header className="admin-modal-header">
             <div className="min-w-0 pr-4">
-              <p className="admin-modal-eyebrow">Gestión de producto</p>
+              <p className="admin-modal-eyebrow">{eyebrow}</p>
               <h2 id="admin-product-modal-title" className="admin-modal-title">
                 {title}
               </h2>

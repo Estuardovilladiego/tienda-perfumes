@@ -24,6 +24,7 @@ import {
   setCartSnapshot,
   subscribeCart,
 } from "@/lib/cart-store";
+import { mismasLineaCarrito } from "@/lib/decants";
 
 type CartContextValue = {
   carrito: Producto[];
@@ -34,8 +35,8 @@ type CartContextValue = {
   cerrarCarrito: () => void;
   agregarAlCarrito: (producto: Producto, cantidadAgregar?: number) => Promise<boolean>;
   comprarAhora: (producto: Producto, cantidadAgregar?: number) => Promise<boolean>;
-  eliminarDelCarrito: (id: number) => void;
-  actualizarCantidadCarrito: (id: number, cantidad: number) => Promise<boolean>;
+  eliminarDelCarrito: (item: Producto) => void;
+  actualizarCantidadCarrito: (item: Producto, cantidad: number) => Promise<boolean>;
   vaciarCarrito: () => void;
   abrirModal: (producto: Producto) => void;
 };
@@ -82,7 +83,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const validarStockProducto = useCallback(
     async (producto: Producto, cantidadNueva: number) => {
-      const validacion = await validarCarritoCliente([{ id: producto.id, cantidad: cantidadNueva }]);
+      const validacion = await validarCarritoCliente([
+        {
+          id: producto.id,
+          cantidad: cantidadNueva,
+          presentacionMl: producto.presentacionMl ?? undefined,
+        },
+      ]);
       if (!validacion.ok) {
         mostrarToast(validacion.error, "error");
         return false;
@@ -99,17 +106,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const agregarAlCarrito = useCallback(
     async (producto: Producto, cantidadAgregar = 1) => {
       const qty = Math.max(1, cantidadAgregar);
-      const enCarrito = carrito.find((item) => item.id === producto.id);
+      const enCarrito = carrito.find((item) => mismasLineaCarrito(item, producto));
       const cantidadTotal = (enCarrito?.cantidad ?? 0) + qty;
 
       const ok = await validarStockProducto(producto, cantidadTotal);
       if (!ok) return false;
 
       setCartSnapshot((prev) => {
-        const existe = prev.find((item) => item.id === producto.id);
+        const existe = prev.find((item) => mismasLineaCarrito(item, producto));
         if (existe) {
           return prev.map((item) =>
-            item.id === producto.id ? { ...item, cantidad: item.cantidad + qty } : item
+            mismasLineaCarrito(item, producto)
+              ? { ...item, cantidad: item.cantidad + qty, precio: producto.precio, volumen: producto.volumen }
+              : item
           );
         }
         return [...prev, { ...producto, cantidad: qty }];
@@ -137,32 +146,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [validarStockProducto]
   );
 
-  const eliminarDelCarrito = useCallback((id: number) => {
+  const eliminarDelCarrito = useCallback((item: Producto) => {
     setCartSnapshot((prev) =>
       prev
-        .map((item) => (item.id === id ? { ...item, cantidad: item.cantidad - 1 } : item))
-        .filter((item) => item.cantidad > 0)
+        .map((linea) =>
+          mismasLineaCarrito(linea, item)
+            ? { ...linea, cantidad: linea.cantidad - 1 }
+            : linea
+        )
+        .filter((linea) => linea.cantidad > 0)
     );
   }, []);
 
   const actualizarCantidadCarrito = useCallback(
-    async (id: number, cantidadNueva: number) => {
+    async (item: Producto, cantidadNueva: number) => {
       const qty = Math.max(0, Math.min(99, Math.floor(cantidadNueva)));
-      const item = carrito.find((i) => i.id === id);
-      if (!item) return false;
+      const enCarrito = carrito.find((i) => mismasLineaCarrito(i, item));
+      if (!enCarrito) return false;
 
       if (qty === 0) {
-        setCartSnapshot((prev) => prev.filter((i) => i.id !== id));
+        setCartSnapshot((prev) => prev.filter((i) => !mismasLineaCarrito(i, item)));
         return true;
       }
 
-      if (qty > item.cantidad) {
-        const ok = await validarStockProducto(item, qty);
+      if (qty > enCarrito.cantidad) {
+        const ok = await validarStockProducto(enCarrito, qty);
         if (!ok) return false;
       }
 
       setCartSnapshot((prev) =>
-        prev.map((i) => (i.id === id ? { ...i, cantidad: qty } : i))
+        prev.map((i) => (mismasLineaCarrito(i, item) ? { ...i, cantidad: qty } : i))
       );
       return true;
     },

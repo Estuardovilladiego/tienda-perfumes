@@ -23,6 +23,9 @@ export type ProductoCatalogo = {
   notasCorazon?: string | null;
   notasFondo?: string | null;
   stock?: number;
+  /** Presentación decant elegida (30, 50 o 100 ml). Mismo producto, distinto precio. */
+  presentacionMl?: number | null;
+  acordesPrincipales?: { nombre: string; valor: number; color: string }[] | null;
 };
 
 export type Producto = ProductoCatalogo & {

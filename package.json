@@ -10,6 +10,7 @@
     "check:prod": "tsx scripts/check-production-env.ts",
     "smoke": "tsx scripts/smoke-checkout.ts",
     "sync:products": "tsx scripts/sync-missing-products.ts",
+    "sync:decants": "tsx scripts/asignar-categoria-decants.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",

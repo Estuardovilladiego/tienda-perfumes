@@ -7,6 +7,10 @@ import StockIndicator from "@/app/components/producto/StockIndicator";
 import type { Producto, ProductoCatalogo } from "../types/producto";
 import { IMAGEN_PLACEHOLDER, urlImagenProducto } from "@/lib/product-imagen";
 import { formatPrecioCOP } from "@/lib/format-precio";
+import {
+  precioDesdeDecant,
+  productoEnCategoriaDecants,
+} from "@/lib/decants";
 
 type Props = ProductoCatalogo & {
   agregarAlCarrito: (producto: Producto) => void;
@@ -32,9 +36,13 @@ export default function ProductCard({
   notasCorazon,
   notasFondo,
   stock,
+  acordesPrincipales,
   agregarAlCarrito,
   abrirModal,
 }: Props) {
+  const enDecants = productoEnCategoriaDecants({ categorias });
+  const precioMostrar = enDecants ? precioDesdeDecant({ precio, nombre, categorias } as ProductoCatalogo) : precio;
+
   const producto: Producto = {
     id,
     slug,
@@ -55,12 +63,13 @@ export default function ProductCard({
     notasCorazon,
     notasFondo,
     stock,
+    acordesPrincipales,
   };
 
   const [imgSrc, setImgSrc] = useState(urlImagenProducto(imagen));
 
   const descuento =
-    precioAnterior && precioAnterior > precio
+    !enDecants && precioAnterior && precioAnterior > precio
       ? Math.round(((precioAnterior - precio) / precioAnterior) * 100)
       : null;
 
@@ -131,20 +140,22 @@ export default function ProductCard({
             {marca ?? descripcion}
           </p>
         )}
-        <p className="mt-0.5 text-xs font-medium text-zinc-600">{volumen}</p>
+        <p className="mt-0.5 text-xs font-medium text-zinc-600">
+          {enDecants ? "30 · 50 · 100 ml" : volumen}
+        </p>
 
         <div className="mt-2 flex justify-center">
           <StockIndicator stock={stock} compact />
         </div>
 
         <div className="mt-2 flex flex-col items-center justify-center gap-0.5">
-          {precioAnterior != null && precioAnterior > precio && (
+          {precioAnterior != null && precioAnterior > precio && !enDecants && (
             <span className="text-[10px] text-zinc-400 line-through sm:text-xs">
               $ {formatPrecioCOP(precioAnterior)}
             </span>
           )}
           <p className="text-base font-bold leading-none text-black min-[380px]:text-lg sm:text-xl">
-            $ {formatPrecioCOP(precio)}
+            {enDecants ? "Desde " : ""}$ {formatPrecioCOP(precioMostrar)}
           </p>
         </div>
       </div>

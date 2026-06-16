@@ -20,6 +20,11 @@ export const CATEGORIAS = [
     slug: "arabes",
     imagen: "/imagenes/khamrah.jpg",
   },
+  {
+    nombre: "Decants",
+    slug: "decants",
+    imagen: "/imagenes/erba-pura.jpg",
+  },
 ] as const;
 
 export type CategoriaSlug = (typeof CATEGORIAS)[number]["slug"];

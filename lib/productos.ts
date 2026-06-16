@@ -18,6 +18,11 @@ import {
   catalogoEssenza,
 } from "@/lib/catalogo-data";
 import { resolverNotas } from "@/lib/notas-perfumes-default";
+import { resolverAcordes } from "@/lib/acordes-perfumes-default";
+import {
+  esProductoDecantDuplicado,
+  productoEnCategoriaDecants,
+} from "@/lib/decants";
 import { slugProducto } from "@/lib/producto-slug";
 import { productosEstaticos } from "@/lib/productos-estaticos";
 
@@ -74,12 +79,18 @@ function mapProducto(p: {
   notasSalida?: string | null;
   notasCorazon?: string | null;
   notasFondo?: string | null;
+  acordesPrincipales?: unknown;
   categorias: { categoria: { nombre: string; slug: string } }[];
   marca: { nombre: string } | null;
   familia: { nombre: string } | null;
 }): ProductoCatalogo {
   const slug = slugProducto(p.nombre);
+  const categorias = mapCategoriasFromPrisma(p.categorias);
   const notas = resolverNotas(slug, p);
+  const enDecants = productoEnCategoriaDecants({ categorias });
+  const acordes = enDecants
+    ? resolverAcordes(slug, { acordesPrincipales: p.acordesPrincipales }, notas)
+    : null;
 
   return {
     id: p.id,
@@ -94,12 +105,13 @@ function mapProducto(p: {
     esNuevo: p.esNuevo,
     enOferta: p.enOferta,
     destacado: p.destacado,
-    categorias: mapCategoriasFromPrisma(p.categorias),
+    categorias,
     marca: p.marca?.nombre ?? null,
     familia: p.familia?.nombre ?? null,
     notasSalida: notas?.salida ?? null,
     notasCorazon: notas?.corazon ?? null,
     notasFondo: notas?.fondo ?? null,
+    acordesPrincipales: acordes,
   };
 }
 
@@ -179,7 +191,7 @@ export async function getProductos(): Promise<ProductosResult> {
       orderBy: { nombre: "asc" },
     });
     return {
-      productos: rows.map(mapProducto),
+      productos: rows.map(mapProducto).filter((p) => !esProductoDecantDuplicado(p.nombre)),
       fuente: "mysql",
     };
   } catch {
@@ -300,7 +312,7 @@ export async function getProductosPaginados(
 
     const totalPaginas = Math.max(1, Math.ceil(total / porPagina));
     const marcas = extraerMarcas(
-      todosParaMarcas.map((p) => ({ marca: p.marca?.nombre ?? null }))
+      todosParaMarcas.map((row) => ({ marca: row.marca?.nombre ?? null }))
     );
 
     return {

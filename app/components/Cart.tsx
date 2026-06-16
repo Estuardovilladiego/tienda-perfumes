@@ -9,6 +9,7 @@ import CheckoutResumenTotales from "@/app/components/checkout/CheckoutResumenTot
 import PaymentMethodPicker from "@/app/components/checkout/PaymentMethodPicker";
 import type { Producto } from "../types/producto";
 import { crearPedidoCliente, validarCarritoCliente } from "@/lib/client-api";
+import { lineaCarritoKey } from "@/lib/decants";
 import { mensajeComprobanteWhatsApp } from "@/lib/format-pedido-whatsapp";
 import { formatPrecioCOP } from "@/lib/format-precio";
 import type { MetodoPagoId } from "@/lib/metodos-pago";
@@ -35,7 +36,7 @@ type CartProps = {
   abierto: boolean;
   cerrar: () => void;
   carrito: Producto[];
-  actualizarCantidadCarrito: (id: number, cantidad: number) => Promise<boolean>;
+  actualizarCantidadCarrito: (item: Producto, cantidad: number) => Promise<boolean>;
   vaciarCarrito: () => void;
   checkoutInmediato?: boolean;
   onCheckoutConsumido?: () => void;
@@ -62,7 +63,7 @@ export default function Cart({
   onCheckoutConsumido,
 }: CartProps) {
   const [paso, setPaso] = useState<CheckoutPaso>("carrito");
-  const [cantidadActualizando, setCantidadActualizando] = useState<number | null>(null);
+  const [cantidadActualizando, setCantidadActualizando] = useState<string | null>(null);
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
   const [ciudad, setCiudad] = useState("Barranquilla");
@@ -80,6 +81,7 @@ export default function Cart({
   const itemsApi = carrito.map((item) => ({
     id: item.id,
     cantidad: item.cantidad,
+    ...(item.presentacionMl ? { presentacionMl: item.presentacionMl } : {}),
   }));
 
   useEffect(() => {
@@ -241,9 +243,10 @@ export default function Cart({
     cerrar();
   }
 
-  async function cambiarCantidadItem(id: number, cantidad: number) {
-    setCantidadActualizando(id);
-    await actualizarCantidadCarrito(id, cantidad);
+  async function cambiarCantidadItem(item: Producto, cantidad: number) {
+    const key = lineaCarritoKey(item);
+    setCantidadActualizando(key);
+    await actualizarCantidadCarrito(item, cantidad);
     setCantidadActualizando(null);
   }
 
@@ -424,8 +427,10 @@ export default function Cart({
             </div>
           ) : (
             <ul className="space-y-3">
-              {carrito.map((item) => (
-                <li key={item.id} className="cart-item">
+              {carrito.map((item) => {
+                const lineaKey = lineaCarritoKey(item);
+                return (
+                <li key={lineaKey} className="cart-item">
                   <div className="cart-item-image">
                     <img
                       src={urlImagenProducto(item.imagen)}
@@ -456,8 +461,8 @@ export default function Cart({
                       <div className="inline-flex items-center rounded-full border border-border bg-cream/40">
                         <button
                           type="button"
-                          onClick={() => cambiarCantidadItem(item.id, item.cantidad - 1)}
-                          disabled={cantidadActualizando === item.id}
+                          onClick={() => cambiarCantidadItem(item, item.cantidad - 1)}
+                          disabled={cantidadActualizando === lineaKey}
                           aria-label="Disminuir cantidad"
                           className="flex h-7 w-7 items-center justify-center rounded-l-full text-muted transition hover:text-foreground disabled:opacity-40"
                         >
@@ -468,8 +473,8 @@ export default function Cart({
                         </span>
                         <button
                           type="button"
-                          onClick={() => cambiarCantidadItem(item.id, item.cantidad + 1)}
-                          disabled={cantidadActualizando === item.id || item.cantidad >= 99}
+                          onClick={() => cambiarCantidadItem(item, item.cantidad + 1)}
+                          disabled={cantidadActualizando === lineaKey || item.cantidad >= 99}
                           aria-label="Aumentar cantidad"
                           className="flex h-7 w-7 items-center justify-center rounded-r-full text-muted transition hover:text-foreground disabled:opacity-40"
                         >
@@ -479,7 +484,8 @@ export default function Cart({
                     </div>
                   </div>
                 </li>
-              ))}
+              );
+              })}
             </ul>
           )}
         </div>

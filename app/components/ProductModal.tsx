@@ -3,9 +3,17 @@
 import { Minus, Plus, ShoppingCart, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import AcordesPrincipales from "@/app/components/producto/AcordesPrincipales";
+import DecantVolumenPicker from "@/app/components/producto/DecantVolumenPicker";
 import StockIndicator from "@/app/components/producto/StockIndicator";
 import type { Producto } from "@/app/types/producto";
 import { formatPrecioCOP } from "@/lib/format-precio";
+import {
+  productoEnCategoriaDecants,
+  resolverPrecioVenta,
+  resolverVolumenVenta,
+  type VolumenDecantML,
+} from "@/lib/decants";
 import { IMAGEN_PLACEHOLDER, urlImagenProducto } from "@/lib/product-imagen";
 import { maxCantidadCompra, stockDisponible } from "@/lib/stock-display";
 
@@ -56,35 +64,58 @@ type PanelProps = {
 };
 
 function ProductModalPanel({
-  producto,
+  producto: productoInicial,
   cerrar,
   abierto,
   agregarAlCarrito,
   comprarAhora,
 }: PanelProps) {
+  const [presentacionMl, setPresentacionMl] = useState<VolumenDecantML>(30);
   const [cantidad, setCantidad] = useState(1);
   const [imagenFallback, setImagenFallback] = useState(false);
   const [procesando, setProcesando] = useState(false);
 
-  const stock = stockDisponible(producto.stock);
+  const enDecants = productoEnCategoriaDecants(productoInicial);
+  const precioMostrar = resolverPrecioVenta(productoInicial, enDecants ? presentacionMl : null);
+  const volumenMostrar = resolverVolumenVenta(productoInicial, enDecants ? presentacionMl : null);
+
+  useEffect(() => {
+    setPresentacionMl(30);
+    setCantidad(1);
+    setImagenFallback(false);
+  }, [productoInicial]);
+
+  const productoParaCarrito: Producto = {
+    ...productoInicial,
+    precio: precioMostrar,
+    volumen: volumenMostrar,
+    presentacionMl: enDecants ? presentacionMl : null,
+    cantidad,
+  };
+
+  const stock = stockDisponible(productoInicial.stock);
   const maxCantidad = maxCantidadCompra(stock);
   const agotado = stock === 0;
-  const imagenSrc = imagenFallback ? IMAGEN_PLACEHOLDER : urlImagenProducto(producto.imagen);
-  const marca = producto.marca ?? producto.descripcion;
-  const breve = descripcionBreve(producto);
-  const composicion = composicionOlfativa(producto);
+  const imagenSrc = imagenFallback ? IMAGEN_PLACEHOLDER : urlImagenProducto(productoInicial.imagen);
+  const marca = productoInicial.marca ?? productoInicial.descripcion;
+  const breve = descripcionBreve(productoInicial);
+  const composicion = composicionOlfativa(productoInicial);
 
   const descuento =
-    producto.precioAnterior && producto.precioAnterior > producto.precio
+    !enDecants &&
+    productoInicial.precioAnterior &&
+    productoInicial.precioAnterior > productoInicial.precio
       ? Math.round(
-          ((producto.precioAnterior - producto.precio) / producto.precioAnterior) * 100
+          ((productoInicial.precioAnterior - productoInicial.precio) /
+            productoInicial.precioAnterior) *
+            100
         )
       : null;
 
   const handleAgregar = async () => {
     if (agotado) return;
     setProcesando(true);
-    const ok = await agregarAlCarrito({ ...producto, cantidad }, cantidad);
+    const ok = await agregarAlCarrito(productoParaCarrito, cantidad);
     setProcesando(false);
     if (ok) cerrar();
   };
@@ -92,7 +123,7 @@ function ProductModalPanel({
   const handleComprar = async () => {
     if (agotado) return;
     setProcesando(true);
-    await comprarAhora({ ...producto, cantidad }, cantidad);
+    await comprarAhora(productoParaCarrito, cantidad);
     setProcesando(false);
   };
 
@@ -121,7 +152,7 @@ function ProductModalPanel({
         )}
         <img
           src={imagenSrc}
-          alt={producto.nombre}
+          alt={productoInicial.nombre}
           onError={() => setImagenFallback(true)}
           className="product-modal-image max-h-[180px] w-full object-contain md:max-h-[min(340px,58vh)]"
         />
@@ -135,20 +166,31 @@ function ProductModalPanel({
               id="modal-titulo"
               className="mt-1.5 text-[1.35rem] font-medium leading-tight tracking-tight text-foreground md:text-[1.5rem]"
             >
-              {producto.nombre}
+              {productoInicial.nombre}
             </h2>
-            <p className="mt-0.5 text-[11px] tracking-wide text-muted">{producto.volumen}</p>
+            <p className="mt-0.5 text-[11px] tracking-wide text-muted">
+              {enDecants ? `Decant · ${volumenMostrar}` : productoInicial.volumen}
+            </p>
           </div>
 
           <div className="product-modal-divider" />
 
+          {enDecants ? (
+            <DecantVolumenPicker
+              seleccionadoMl={presentacionMl}
+              onSeleccionar={setPresentacionMl}
+            />
+          ) : null}
+
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <p className="text-xl font-semibold tracking-tight md:text-2xl">
-              $ {formatPrecioCOP(producto.precio)}
+              $ {formatPrecioCOP(precioMostrar)}
             </p>
-            {producto.precioAnterior != null && producto.precioAnterior > producto.precio && (
+            {productoInicial.precioAnterior != null &&
+              productoInicial.precioAnterior > precioMostrar &&
+              !enDecants && (
               <p className="text-sm text-muted line-through">
-                $ {formatPrecioCOP(producto.precioAnterior)}
+                $ {formatPrecioCOP(productoInicial.precioAnterior)}
               </p>
             )}
             <StockIndicator stock={stock} compact />
@@ -156,6 +198,10 @@ function ProductModalPanel({
 
           {breve ? (
             <p className="line-clamp-2 text-[12px] leading-relaxed text-muted">{breve}</p>
+          ) : null}
+
+          {enDecants && productoInicial.acordesPrincipales?.length ? (
+            <AcordesPrincipales acordes={productoInicial.acordesPrincipales} />
           ) : null}
 
           {composicion ? (

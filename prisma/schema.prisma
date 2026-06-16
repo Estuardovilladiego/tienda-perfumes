@@ -66,6 +66,8 @@ model Producto {
   notasSalida    String?             @db.Text
   notasCorazon   String?             @db.Text
   notasFondo     String?             @db.Text
+  /** Acordes principales [{ nombre, valor, color }] en categoría Decants. */
+  acordesPrincipales Json?
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
 

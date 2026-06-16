@@ -29,11 +29,14 @@ export async function getCategoriasPublicas(): Promise<CategoriaPublica[]> {
       },
     });
 
+    const { getConteosPorCategoria } = await import("@/lib/productos");
+    const conteos = await getConteosPorCategoria();
+
     return rows.map((cat) => ({
       nombre: cat.nombre,
       slug: cat.slug,
       imagen: cat.imagen || imagenFallback,
-      cantidad: cat.productos.length,
+      cantidad: conteos[cat.slug] ?? cat.productos.length,
     }));
   } catch {
     return getCategoriasFallback();

@@ -5,6 +5,12 @@ import type {
 } from "@/lib/api/types";
 import { catalogoEssenza } from "@/lib/catalogo-data";
 import { esModoDemoEstatico } from "@/lib/config";
+import {
+  esPresentacionDecantValida,
+  productoEnCategoriaDecants,
+  resolverPrecioVenta,
+  resolverVolumenVenta,
+} from "@/lib/decants";
 import { getProductoPorId } from "@/lib/productos";
 
 function stockEstatico(productoId: number): number {
@@ -52,6 +58,22 @@ export async function validarCarrito(
       continue;
     }
 
+    const enDecants = productoEnCategoriaDecants(producto);
+    const presentacionMl = item.presentacionMl;
+
+    if (enDecants) {
+      if (!presentacionMl || !esPresentacionDecantValida(presentacionMl)) {
+        errores.push(`${producto.nombre}: selecciona presentación 30, 50 o 100 ml`);
+        continue;
+      }
+    } else if (presentacionMl) {
+      errores.push(`${producto.nombre}: presentación decant no aplica`);
+      continue;
+    }
+
+    const precio = resolverPrecioVenta(producto, presentacionMl);
+    const volumen = resolverVolumenVenta(producto, presentacionMl);
+
     const stock = await stockProducto(item.id);
     const disponible = stock >= cantidad;
     if (!disponible) {
@@ -63,13 +85,13 @@ export async function validarCarrito(
     validados.push({
       id: producto.id,
       nombre: producto.nombre,
-      precio: producto.precio,
+      precio,
       cantidad,
       stock,
       disponible,
-      subtotal: producto.precio * cantidad,
+      subtotal: precio * cantidad,
       imagen: producto.imagen,
-      volumen: producto.volumen,
+      volumen,
     });
   }
 

@@ -3,6 +3,8 @@
 export type CarritoItemInput = {
   id: number;
   cantidad: number;
+  /** 30, 50 o 100 — solo perfumes en categoría Decants */
+  presentacionMl?: number;
 };
 
 export type CarritoItemValidado = {

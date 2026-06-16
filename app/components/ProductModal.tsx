@@ -225,7 +225,9 @@ function ProductModalPanel({
               disabled={procesando || agotado}
               className="pm-btn pm-btn--primary"
             >
-              <ShoppingBag size={16} strokeWidth={1.5} />
+              <span className="pm-btn-icon" aria-hidden>
+                <ShoppingBag size={17} strokeWidth={1.35} />
+              </span>
               {procesando ? "Agregando…" : agotado ? "No disponible" : "Añadir al carrito"}
             </button>
             <button

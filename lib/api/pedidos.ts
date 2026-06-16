@@ -144,12 +144,11 @@ export async function crearPedido(input: CrearPedidoInput) {
     throw error;
   }
 
-  void notificarPedidoPorEmail(creado);
-
   return creado;
 }
 
-async function notificarPedidoPorEmail(
+/** Envía confirmación al cliente y aviso al admin. */
+export async function notificarPedidoPorEmail(
   pedido: {
     numero: string;
     nombre: string;
@@ -170,7 +169,12 @@ async function notificarPedidoPorEmail(
     }[];
   }
 ) {
-  if (!pedido.email?.trim()) return;
+  if (!pedido.email?.trim()) {
+    return {
+      cliente: { enviado: false as const, motivo: "sin_email" },
+      admin: { enviado: false as const, motivo: "sin_email" },
+    };
+  }
 
   const { enviarConfirmacionPedido, enviarAvisoPedidoAdmin } = await import("@/lib/email");
 
@@ -203,8 +207,13 @@ async function notificarPedidoPorEmail(
         admin,
       });
     }
+    return { cliente, admin };
   } catch (e) {
     console.error("[email] No se pudo enviar confirmación de pedido:", e);
+    return {
+      cliente: { enviado: false as const, motivo: "error" },
+      admin: { enviado: false as const, motivo: "error" },
+    };
   }
 }
 

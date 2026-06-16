@@ -13,6 +13,7 @@ type Props = {
   total: number;
   metodoPago: MetodoPagoId;
   email?: string;
+  correoEnviado?: boolean;
   onWhatsApp: () => void;
   onCerrar: () => void;
 };
@@ -33,6 +34,7 @@ export default function CheckoutConfirmacion({
   total,
   metodoPago,
   email,
+  correoEnviado,
   onWhatsApp,
   onCerrar,
 }: Props) {
@@ -49,10 +51,17 @@ export default function CheckoutConfirmacion({
           Envíanos por WhatsApp tu{" "}
           <strong>número de pedido: {numeroVisible}</strong> y el comprobante de pago.
           {email ? (
-            <>
-              {" "}
-              Resumen enviado a <strong>{email}</strong>.
-            </>
+            correoEnviado ? (
+              <>
+                {" "}
+                Resumen enviado a <strong>{email}</strong>.
+              </>
+            ) : (
+              <>
+                {" "}
+                No pudimos enviar el resumen a <strong>{email}</strong>. Revisa spam o contáctanos por WhatsApp.
+              </>
+            )
           ) : null}
         </p>
 

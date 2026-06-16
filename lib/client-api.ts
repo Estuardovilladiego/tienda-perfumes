@@ -37,6 +37,7 @@ export async function crearPedidoCliente(input: CrearPedidoInput) {
     ciudad: string;
     direccion: string;
     metodoPago: string;
+    correoEnviado?: boolean;
   }>(res);
 }
 

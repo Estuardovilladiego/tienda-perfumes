@@ -28,6 +28,7 @@ type PedidoConfirmado = {
   items: { nombre: string; volumen: string; cantidad: number; precio: number }[];
   ciudad: string;
   direccion: string;
+  correoEnviado?: boolean;
 };
 
 type CartProps = {
@@ -203,6 +204,7 @@ export default function Cart({
       })),
       ciudad: ciudadTrim,
       direccion: direccionTrim,
+      correoEnviado: pedido.data.correoEnviado,
     });
     setPaso("confirmacion");
     vaciarCarrito();
@@ -358,6 +360,7 @@ export default function Cart({
               total={pedidoConfirmado.total}
               metodoPago={metodoPago}
               email={normalizarEmail(email)}
+              correoEnviado={pedidoConfirmado.correoEnviado}
               onWhatsApp={enviarWhatsAppComprobante}
               onCerrar={handleCerrar}
             />

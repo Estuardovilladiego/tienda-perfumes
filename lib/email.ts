@@ -54,22 +54,30 @@ async function enviarCorreoTransaccional(opciones: OpcionesEnvio) {
   const replyTo = replyToCorreo();
   const user = process.env.SMTP_USER?.trim() || site.email;
 
-  await transport.sendMail({
-    from,
-    to: opciones.to,
-    replyTo,
-    envelope: {
-      from: user,
+  try {
+    await transport.sendMail({
+      from,
       to: opciones.to,
-    },
-    subject: opciones.subject,
-    text: opciones.text,
-    html: opciones.html,
-    attachments: adjuntosLogoEmail(),
-    headers: encabezadosCorreoTransaccional(opciones.messageIdPrefix ?? "pedido"),
-  });
+      replyTo,
+      envelope: {
+        from: user,
+        to: opciones.to,
+      },
+      subject: opciones.subject,
+      text: opciones.text,
+      html: opciones.html,
+      attachments: adjuntosLogoEmail(),
+      headers: encabezadosCorreoTransaccional(opciones.messageIdPrefix ?? "pedido"),
+    });
 
-  return { enviado: true as const };
+    return { enviado: true as const };
+  } catch (error) {
+    const mensaje = error instanceof Error ? error.message : String(error);
+    console.error("[email] Error al enviar correo:", mensaje);
+    return { enviado: false as const, motivo: "error_smtp", detalle: mensaje };
+  } finally {
+    transport.close();
+  }
 }
 
 /** Envía confirmación al cliente. No lanza error si SMTP no está configurado. */

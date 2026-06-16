@@ -19,11 +19,12 @@ CLOUDINARY_UPLOAD_PRESET
 CLOUDINARY_API_KEY
 CLOUDINARY_API_SECRET
 
-SMTP_HOST
-SMTP_PORT
+SMTP_HOST                   # smtp.gmail.com
+SMTP_PORT                   # 587
 SMTP_USER
 SMTP_PASS                   # Gmail: 16 caracteres SIN espacios (ej. idtrvbuybzdyfjbo)
 SMTP_FROM
+SMTP_REPLY_TO               # opcional; mismo que SMTP_USER si no lo defines
 
 NEXT_PUBLIC_PAGO_NEQUI
 NEXT_PUBLIC_PAGO_DAVIPLATA

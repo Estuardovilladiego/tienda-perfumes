@@ -95,6 +95,9 @@ export function opcionesTransporteSmtp() {
       user: smtpUser(),
       pass: smtpPass(),
     },
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
     tls: {
       minVersion: "TLSv1.2" as const,
     },

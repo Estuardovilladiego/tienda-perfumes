@@ -97,6 +97,8 @@ export async function crearPedido(input: CrearPedidoInput) {
 
   try {
     for (const item of validacion.items) {
+      if (item.esDecant) continue;
+
       const producto = await prisma.producto.findFirst({
         where: { id: item.id, activo: true },
         select: { stock: true },

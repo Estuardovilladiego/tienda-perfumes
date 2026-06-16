@@ -1,24 +1,44 @@
+import type { CategoriaRef } from "@/app/types/producto";
+import { puedeVenderDecant, stockParaVenta } from "@/lib/decants";
 import { etiquetaStock, stockDisponible } from "@/lib/stock-display";
 
 type Props = {
   stock: number | undefined | null;
+  categorias?: CategoriaRef[];
   compact?: boolean;
   className?: string;
 };
 
-export default function StockIndicator({ stock: raw, compact, className = "" }: Props) {
-  const stock = stockDisponible(raw);
-  const label = etiquetaStock(stock);
+export default function StockIndicator({ stock: raw, categorias, compact, className = "" }: Props) {
+  const stockFrasco = stockDisponible(raw);
+  const enDecants = puedeVenderDecant({ categorias });
+  const stockVenta = enDecants
+    ? stockParaVenta({ stock: raw, categorias })
+    : stockFrasco;
+
+  const label = enDecants
+    ? stockFrasco <= 0
+      ? "Decant disponible"
+      : `Decant · ${etiquetaStock(stockFrasco).toLowerCase()}`
+    : etiquetaStock(stockVenta);
 
   const tone =
-    stock === 0
+    stockVenta === 0
       ? "bg-red-50 text-red-700 ring-red-100"
-      : stock <= 5
-        ? "bg-amber-50 text-amber-900 ring-amber-100"
-        : "bg-emerald-50 text-emerald-800 ring-emerald-100";
+      : enDecants && stockFrasco <= 0
+        ? "bg-[#faf6ef] text-[#8b6914] ring-[#e8ded4]"
+        : stockVenta <= 5
+          ? "bg-amber-50 text-amber-900 ring-amber-100"
+          : "bg-emerald-50 text-emerald-800 ring-emerald-100";
 
   const dot =
-    stock === 0 ? "bg-red-500" : stock <= 5 ? "bg-amber-500" : "bg-emerald-500";
+    stockVenta === 0
+      ? "bg-red-500"
+      : enDecants && stockFrasco <= 0
+        ? "bg-[#b8956a]"
+        : stockVenta <= 5
+          ? "bg-amber-500"
+          : "bg-emerald-500";
 
   return (
     <span

@@ -76,7 +76,7 @@ export default function ProductCard({
 
   const mostrarFuego = destacado || esNuevo;
   const sinStock = enDecants
-    ? stockParaVenta({ stock, categorias }, 30) <= 0
+    ? stockParaVenta({ stock, categorias }) <= 0
     : (stock ?? 0) <= 0;
 
   const iconBtn =
@@ -148,7 +148,7 @@ export default function ProductCard({
         </p>
 
         <div className="mt-2 flex justify-center">
-          <StockIndicator stock={stock} compact />
+          <StockIndicator stock={stock} categorias={categorias} compact />
         </div>
 
         <div className="mt-2 flex flex-col items-center justify-center gap-0.5">

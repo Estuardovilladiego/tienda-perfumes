@@ -91,7 +91,7 @@ function ProductModalPanel({
   );
   const stockFrasco = Math.max(0, productoInicial.stock ?? 0);
   const maxCantidad = maxCantidadCompra(stock);
-  const agotado = stock === 0;
+  const agotado = !enDecants && stock === 0;
   const imagenSrc = imagenFallback ? IMAGEN_PLACEHOLDER : urlImagenProducto(productoInicial.imagen);
   const marca = productoInicial.marca ?? productoInicial.descripcion;
 
@@ -177,10 +177,12 @@ function ProductModalPanel({
             ) : null}
             {agotado ? (
               <span className="pm-stock pm-stock--agotado">Agotado</span>
-            ) : stockFrasco <= 5 && !enDecants ? (
-              <span className="pm-stock">Pocas unidades</span>
             ) : enDecants ? (
-              <span className="pm-stock pm-stock--ok">Decant disponible</span>
+              <span className="pm-stock pm-stock--ok">
+                {stockFrasco <= 0 ? "Decant disponible" : "Decant · frasco en stock"}
+              </span>
+            ) : stockFrasco <= 5 ? (
+              <span className="pm-stock">Pocas unidades</span>
             ) : null}
           </div>
 

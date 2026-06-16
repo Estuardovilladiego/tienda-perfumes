@@ -26,6 +26,7 @@ import { FormEvent, Fragment, useMemo, useState } from "react";
 
 import AdminImageField, { AdminImageGalleryField } from "@/app/components/admin/AdminImageField";
 import AdminProductModal from "@/app/components/admin/AdminProductModal";
+import { useAdminConfirm } from "@/app/components/admin/AdminConfirmDialog";
 import {
   AdminFieldInput,
   AdminFieldTextarea,
@@ -192,6 +193,7 @@ export default function AdminPanel({
   initialPedidos,
 }: any) {
   const router = useRouter();
+  const { confirm, dialog: confirmDialog } = useAdminConfirm();
   const [tab, setTab] = useState<Tab>("dashboard");
   const [dashboard, setDashboard] = useState(initialDashboard);
   const [productos, setProductos] = useState(initialProductos);
@@ -359,7 +361,14 @@ export default function AdminPanel({
   }
 
   async function deleteProduct(id: number) {
-    if (!confirm("¿Desactivar este producto del catálogo?")) return;
+    const ok = await confirm({
+      title: "Desactivar producto",
+      message: "¿Desactivar este producto del catálogo? Dejará de mostrarse en la tienda.",
+      confirmLabel: "Desactivar",
+      cancelLabel: "Cancelar",
+      variant: "danger",
+    });
+    if (!ok) return;
     setLoading(true);
     clearFeedback();
     try {
@@ -422,7 +431,14 @@ export default function AdminPanel({
   }
 
   async function deleteCategory(id: number) {
-    if (!confirm("¿Eliminar esta categoría? Solo funciona si no tiene productos asociados.")) return;
+    const ok = await confirm({
+      title: "Eliminar categoría",
+      message: "¿Eliminar esta categoría? Solo funciona si no tiene productos asociados.",
+      confirmLabel: "Eliminar",
+      cancelLabel: "Cancelar",
+      variant: "danger",
+    });
+    if (!ok) return;
     setLoading(true);
     clearFeedback();
     try {
@@ -489,7 +505,14 @@ export default function AdminPanel({
   }
 
   async function deleteOrder(id: number, numero?: string) {
-    if (!confirm(`¿Eliminar el pedido ${numero || `#${id}`}? Esta acción no se puede deshacer.`)) return;
+    const ok = await confirm({
+      title: "Eliminar pedido",
+      message: `¿Eliminar el pedido ${numero || `#${id}`}? Esta acción no se puede deshacer.`,
+      confirmLabel: "Eliminar pedido",
+      cancelLabel: "Cancelar",
+      variant: "danger",
+    });
+    if (!ok) return;
     setLoading(true);
     clearFeedback();
     try {
@@ -670,6 +693,7 @@ export default function AdminPanel({
             <OrdersPanel pedidos={pedidos} changeOrder={changeOrder} onDelete={deleteOrder} />
           )}
       </AdminPageLayout>
+      {confirmDialog}
     </>
   );
 }

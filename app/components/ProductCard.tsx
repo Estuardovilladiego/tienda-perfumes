@@ -10,6 +10,7 @@ import { formatPrecioCOP } from "@/lib/format-precio";
 import {
   precioDesdeDecant,
   productoEnCategoriaDecants,
+  stockParaVenta,
 } from "@/lib/decants";
 
 type Props = ProductoCatalogo & {
@@ -74,7 +75,9 @@ export default function ProductCard({
       : null;
 
   const mostrarFuego = destacado || esNuevo;
-  const sinStock = (stock ?? 0) <= 0;
+  const sinStock = enDecants
+    ? stockParaVenta({ stock, categorias }, 30) <= 0
+    : (stock ?? 0) <= 0;
 
   const iconBtn =
     "text-zinc-400 transition hover:text-[#ea580c] focus-visible:text-[#ea580c] outline-none";
@@ -109,8 +112,8 @@ export default function ProductCard({
       <div className="mt-3 flex items-center justify-center gap-1 sm:gap-4">
         <button
           type="button"
-          onClick={() => agregarAlCarrito(producto)}
-          aria-label="Agregar al carrito"
+          onClick={() => (enDecants ? verProducto() : agregarAlCarrito(producto))}
+          aria-label={enDecants ? "Elegir presentación" : "Agregar al carrito"}
           disabled={sinStock}
           className={`tap-target flex items-center justify-center ${iconBtn} disabled:cursor-not-allowed disabled:opacity-30`}
         >

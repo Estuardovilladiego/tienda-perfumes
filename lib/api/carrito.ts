@@ -10,6 +10,7 @@ import {
   productoEnCategoriaDecants,
   resolverPrecioVenta,
   resolverVolumenVenta,
+  stockParaVenta,
 } from "@/lib/decants";
 import { getProductoPorId } from "@/lib/productos";
 
@@ -74,7 +75,8 @@ export async function validarCarrito(
     const precio = resolverPrecioVenta(producto, presentacionMl);
     const volumen = resolverVolumenVenta(producto, presentacionMl);
 
-    const stock = await stockProducto(item.id);
+    const stockDb = await stockProducto(item.id);
+    const stock = stockParaVenta({ stock: stockDb, categorias: producto.categorias }, presentacionMl);
     const disponible = stock >= cantidad;
     if (!disponible) {
       errores.push(

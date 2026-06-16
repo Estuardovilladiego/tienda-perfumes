@@ -81,6 +81,22 @@ export function precioDesdeDecant(_producto: ProductoCatalogo) {
   return PRECIOS_DECANT_COP[30];
 }
 
+/** Stock efectivo: decants con presentación siguen disponibles aunque el frasco base esté en 0. */
+export function stockParaVenta(
+  producto: { stock?: number | null; categorias?: CategoriaRef[] },
+  presentacionMl?: number | null
+): number {
+  const base = Math.max(0, producto.stock ?? 0);
+  if (
+    productoEnCategoriaDecants(producto) &&
+    presentacionMl &&
+    esPresentacionDecantValida(presentacionMl)
+  ) {
+    return base > 0 ? base : 99;
+  }
+  return base;
+}
+
 /** Clave única de línea en carrito (mismo id + distinta presentación = líneas distintas). */
 export function lineaCarritoKey(item: { id: number; presentacionMl?: number | null }) {
   return item.presentacionMl ? `${item.id}-d${item.presentacionMl}` : String(item.id);

@@ -1,6 +1,5 @@
 "use client";
 
-import type { ProductoCatalogo } from "@/app/types/producto";
 import { formatPrecioCOP } from "@/lib/format-precio";
 import {
   opcionesPresentacionDecant,
@@ -16,30 +15,22 @@ export default function DecantVolumenPicker({ seleccionadoMl, onSeleccionar }: P
   const opciones = opcionesPresentacionDecant();
 
   return (
-    <div className="rounded-lg border border-border/70 bg-cream/40 px-3 py-2.5">
-      <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-gold">
-        Presentación
-      </p>
-      <div className="mt-2 grid grid-cols-3 gap-2">
+    <div className="pm-presentacion">
+      <p className="pm-section-label">Presentación</p>
+      <div className="pm-presentacion-grid" role="radiogroup" aria-label="Elegir presentación">
         {opciones.map((opcion) => {
           const activo = opcion.ml === seleccionadoMl;
           return (
             <button
               key={opcion.ml}
               type="button"
+              role="radio"
+              aria-checked={activo}
               onClick={() => onSeleccionar(opcion.ml)}
-              className={`rounded-lg border px-2 py-2 text-center transition ${
-                activo
-                  ? "border-gold bg-white shadow-sm"
-                  : "border-border/70 bg-white/70 hover:border-gold/40"
-              }`}
+              className={`pm-presentacion-card ${activo ? "is-active" : ""}`}
             >
-              <span className="block text-[11px] font-semibold text-foreground">
-                {opcion.ml} ml
-              </span>
-              <span className="mt-0.5 block text-[10px] text-muted">
-                $ {formatPrecioCOP(opcion.precio)}
-              </span>
+              <span className="pm-presentacion-ml">{opcion.ml} ml</span>
+              <span className="pm-presentacion-precio">$ {formatPrecioCOP(opcion.precio)}</span>
             </button>
           );
         })}

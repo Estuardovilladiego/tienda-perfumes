@@ -59,18 +59,22 @@ export async function validarCarrito(
       continue;
     }
 
-    const enDecants = productoEnCategoriaDecants(producto);
-    const presentacionMl = item.presentacionMl;
+    const rawPresentacion = item.presentacionMl;
+    /** Venta decant solo si el cliente eligió 30/50/100 ml; catálogo general = frasco. */
+    const compraDecant = rawPresentacion != null;
 
-    if (enDecants) {
-      if (!presentacionMl || !esPresentacionDecantValida(presentacionMl)) {
+    if (compraDecant) {
+      if (!productoEnCategoriaDecants(producto)) {
+        errores.push(`${producto.nombre}: presentación decant no aplica`);
+        continue;
+      }
+      if (!esPresentacionDecantValida(rawPresentacion)) {
         errores.push(`${producto.nombre}: selecciona presentación 30, 50 o 100 ml`);
         continue;
       }
-    } else if (presentacionMl) {
-      errores.push(`${producto.nombre}: presentación decant no aplica`);
-      continue;
     }
+
+    const presentacionMl = compraDecant ? rawPresentacion : undefined;
 
     const precio = resolverPrecioVenta(producto, presentacionMl);
     const volumen = resolverVolumenVenta(producto, presentacionMl);
@@ -79,7 +83,7 @@ export async function validarCarrito(
     const stock = stockParaVenta(
       { stock: stockDb, categorias: producto.categorias },
       presentacionMl,
-      !!presentacionMl
+      compraDecant
     );
     const disponible = stock >= cantidad;
     if (!disponible) {
@@ -98,7 +102,7 @@ export async function validarCarrito(
       subtotal: precio * cantidad,
       imagen: producto.imagen,
       volumen,
-      esDecant: enDecants && !!presentacionMl,
+      esDecant: compraDecant,
     });
   }
 

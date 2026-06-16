@@ -1,5 +1,15 @@
 import { site } from "@/lib/site";
 
+export const TITULAR_CUENTAS_PAGO = "Cielo Luz Avilez Salgado";
+
+/** Nombre del titular de Nequi, Daviplata, Bancolombia, Falabella, etc. */
+export function nombreTitularCuentas() {
+  const nombre =
+    process.env.NEXT_PUBLIC_PAGO_TITULAR_NOMBRE?.trim() ||
+    process.env.NEXT_PUBLIC_PAGO_TITULAR?.trim();
+  return nombre || TITULAR_CUENTAS_PAGO;
+}
+
 export type MetodoPagoId =
   | "nequi"
   | "daviplata"
@@ -30,11 +40,15 @@ export const cuentasPago = {
   bancolombia: {
     numero: process.env.NEXT_PUBLIC_PAGO_BANCOLOMBIA_CUENTA || "48664039535",
     tipo: process.env.NEXT_PUBLIC_PAGO_BANCOLOMBIA_TIPO || "Ahorros",
-    titular: process.env.NEXT_PUBLIC_PAGO_TITULAR || site.nombre,
+    get titular() {
+      return nombreTitularCuentas();
+    },
   },
   falabella: {
     numero: process.env.NEXT_PUBLIC_PAGO_FALABELLA_CUENTA || "111820585281",
-    titular: process.env.NEXT_PUBLIC_PAGO_TITULAR || site.nombre,
+    get titular() {
+      return nombreTitularCuentas();
+    },
   },
   sistecredito: {
     comercio: process.env.NEXT_PUBLIC_PAGO_SISTECREDITO_COMERCIO || site.nombre,
@@ -154,28 +168,31 @@ export function cuentaMetodoPago(metodoId: MetodoPagoId): LineaCuentaPago[] {
 
   switch (metodoId) {
     case "nequi":
-      return [{ label: "Nequi", valor: fmtCelular(c.nequi) }];
+      return [
+        { label: "Nequi", valor: fmtCelular(c.nequi) },
+        { label: "Titular", valor: nombreTitularCuentas() },
+      ];
     case "daviplata":
-      return [{ label: "Daviplata", valor: fmtCelular(c.daviplata) }];
+      return [
+        { label: "Daviplata", valor: fmtCelular(c.daviplata) },
+        { label: "Titular", valor: nombreTitularCuentas() },
+      ];
     case "llaves":
       return [
         { label: "Llave Bre-B", valor: c.llaves.alias },
         { label: "Celular", valor: fmtCelular(c.llaves.celular) },
+        { label: "Titular", valor: nombreTitularCuentas() },
       ];
     case "bancolombia":
       return [
         { label: "Bancolombia", valor: c.bancolombia.numero },
         { label: "Tipo de cuenta", valor: c.bancolombia.tipo },
-        ...(c.bancolombia.titular
-          ? [{ label: "Titular", valor: c.bancolombia.titular }]
-          : []),
+        { label: "Titular", valor: c.bancolombia.titular },
       ];
     case "falabella":
       return [
         { label: "Falabella", valor: c.falabella.numero },
-        ...(c.falabella.titular
-          ? [{ label: "Titular", valor: c.falabella.titular }]
-          : []),
+        { label: "Titular", valor: c.falabella.titular },
       ];
     case "sistecredito":
       return [{ label: "Comercio", valor: c.sistecredito.comercio }];
@@ -194,6 +211,7 @@ export function instruccionesPago(metodoId: MetodoPagoId, total: number, numeroP
     case "nequi":
       return [
         `Envía ${totalFmt} al Nequi ${fmtCelular(cuentasPago.nequi)}.`,
+        `Titular: ${nombreTitularCuentas()}.`,
         `Llave Bre-B alternativa: ${cuentasPago.llaves.alias}.`,
         `Referencia: ${ref}.`,
         "Envía el comprobante por WhatsApp.",
@@ -201,6 +219,7 @@ export function instruccionesPago(metodoId: MetodoPagoId, total: number, numeroP
     case "daviplata":
       return [
         `Envía ${totalFmt} al Daviplata ${fmtCelular(cuentasPago.daviplata)}.`,
+        `Titular: ${nombreTitularCuentas()}.`,
         `Referencia: ${ref}.`,
         "Comparte el comprobante por WhatsApp.",
       ];
@@ -208,6 +227,7 @@ export function instruccionesPago(metodoId: MetodoPagoId, total: number, numeroP
       return [
         `Paga ${totalFmt} con Llaves (Bre-B).`,
         `Llave: ${cuentasPago.llaves.alias} · Celular: ${fmtCelular(cuentasPago.llaves.celular)}.`,
+        `Titular: ${nombreTitularCuentas()}.`,
         `Referencia: ${ref}.`,
         "Envía captura del pago por WhatsApp.",
       ];
@@ -252,10 +272,9 @@ export function requiereReferenciaPago(_metodoId: MetodoPagoId) {
 }
 
 export const titularPago = {
-  nombre:
-    process.env.NEXT_PUBLIC_PAGO_TITULAR_NOMBRE ||
-    process.env.NEXT_PUBLIC_PAGO_TITULAR ||
-    site.nombre,
+  get nombre() {
+    return nombreTitularCuentas();
+  },
   cedula: process.env.NEXT_PUBLIC_PAGO_CEDULA || "",
 };
 

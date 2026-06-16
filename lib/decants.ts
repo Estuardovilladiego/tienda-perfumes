@@ -31,6 +31,11 @@ export function productoEnCategoriaDecants(producto: {
   return producto.categorias?.some((c) => c.slug === CATEGORIA_DECANTS_SLUG) ?? false;
 }
 
+/** Vista activa de la categoría Decants (precios y presentaciones decant). */
+export function esVistaDecants(categoriaSlug?: string | null) {
+  return categoriaSlug === CATEGORIA_DECANTS_SLUG;
+}
+
 export function opcionesPresentacionDecant(): OpcionPresentacion[] {
   return VOLUMENES_DECANT_ML.map((ml) => ({
     ml,
@@ -48,7 +53,7 @@ export function precioPresentacionDecant(ml: number): number | null {
   return PRECIOS_DECANT_COP[ml];
 }
 
-/** Precio efectivo: decant si tiene categoría + presentación; si no, precio del producto. */
+/** Precio efectivo: decant si tiene presentación; si no, precio del frasco en catálogo. */
 export function resolverPrecioVenta(
   producto: Pick<ProductoCatalogo, "precio" | "categorias">,
   presentacionMl?: number | null
@@ -96,13 +101,17 @@ export function precioDesdeDecant(_producto: ProductoCatalogo) {
   return PRECIOS_DECANT_COP[30];
 }
 
-/** Stock efectivo: decants se venden aunque el frasco base esté en 0. */
+/** Stock decant: solo aplica en vista Decants o al comprar con presentación. */
 export function stockParaVenta(
   producto: { stock?: number | null; categorias?: CategoriaRef[] },
-  presentacionMl?: number | null
+  presentacionMl?: number | null,
+  vistaDecants = false
 ): number {
   const base = Math.max(0, producto.stock ?? 0);
-  if (!productoEnCategoriaDecants(producto)) return base;
+  const enDecants = productoEnCategoriaDecants(producto);
+  const modoDecant =
+    vistaDecants || (presentacionMl != null && esPresentacionDecantValida(presentacionMl));
+  if (!enDecants || !modoDecant) return base;
   if (presentacionMl != null && !esPresentacionDecantValida(presentacionMl)) return base;
   return Math.max(base, 99);
 }

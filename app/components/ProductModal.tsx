@@ -21,6 +21,7 @@ type Props = {
   abierto: boolean;
   cerrar: () => void;
   producto: Producto | null;
+  modoDecant?: boolean;
   agregarAlCarrito: (producto: Producto, cantidad?: number) => Promise<boolean>;
   comprarAhora: (producto: Producto, cantidad?: number) => Promise<boolean>;
   urlProducto?: string;
@@ -48,6 +49,7 @@ type PanelProps = {
   producto: Producto;
   cerrar: () => void;
   abierto: boolean;
+  modoDecant: boolean;
   agregarAlCarrito: (producto: Producto, cantidad?: number) => Promise<boolean>;
   comprarAhora: (producto: Producto, cantidad?: number) => Promise<boolean>;
 };
@@ -56,6 +58,7 @@ function ProductModalPanel({
   producto: productoInicial,
   cerrar,
   abierto,
+  modoDecant,
   agregarAlCarrito,
   comprarAhora,
 }: PanelProps) {
@@ -64,7 +67,7 @@ function ProductModalPanel({
   const [imagenFallback, setImagenFallback] = useState(false);
   const [procesando, setProcesando] = useState(false);
 
-  const enDecants = productoEnCategoriaDecants(productoInicial);
+  const enDecants = modoDecant && productoEnCategoriaDecants(productoInicial);
   const precioMostrar = resolverPrecioVenta(productoInicial, enDecants ? presentacionMl : null);
   const volumenMostrar = resolverVolumenVenta(productoInicial, enDecants ? presentacionMl : null);
 
@@ -87,7 +90,8 @@ function ProductModalPanel({
 
   const stock = stockParaVenta(
     productoInicial,
-    enDecants ? presentacionMl : null
+    enDecants ? presentacionMl : null,
+    enDecants
   );
   const stockFrasco = Math.max(0, productoInicial.stock ?? 0);
   const maxCantidad = maxCantidadCompra(stock);
@@ -283,6 +287,7 @@ export default function ProductModal({
   abierto,
   cerrar,
   producto,
+  modoDecant = false,
   agregarAlCarrito,
   comprarAhora,
 }: Props) {
@@ -317,10 +322,11 @@ export default function ProductModal({
         onClick={cerrar}
       >
         <ProductModalPanel
-          key={producto.id}
+          key={`${producto.id}-${modoDecant ? "d" : "f"}`}
           producto={producto}
           cerrar={cerrar}
           abierto={abierto}
+          modoDecant={modoDecant}
           agregarAlCarrito={agregarAlCarrito}
           comprarAhora={comprarAhora}
         />

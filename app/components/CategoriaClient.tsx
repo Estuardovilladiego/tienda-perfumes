@@ -70,6 +70,7 @@ export default function CategoriaClient({
             <>
               <ProductGrid
                 productos={productos}
+                categoriaSlug={categoriaSlug}
                 agregarAlCarrito={agregarAlCarrito}
                 abrirModal={abrirModal}
               />

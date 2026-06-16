@@ -15,6 +15,7 @@ import {
 import Cart from "@/app/components/Cart";
 import CartToast from "@/app/components/CartToast";
 import ProductModal from "@/app/components/ProductModal";
+import type { AbrirModalOpciones } from "@/app/components/ProductCard";
 import type { Producto } from "@/app/types/producto";
 import { validarCarritoCliente } from "@/lib/client-api";
 import {
@@ -38,7 +39,7 @@ type CartContextValue = {
   eliminarDelCarrito: (item: Producto) => void;
   actualizarCantidadCarrito: (item: Producto, cantidad: number) => Promise<boolean>;
   vaciarCarrito: () => void;
-  abrirModal: (producto: Producto) => void;
+  abrirModal: (producto: Producto, opciones?: AbrirModalOpciones) => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -51,6 +52,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [toastMessage, setToastMessage] = useState("Producto agregado al carrito");
   const [toastVariant, setToastVariant] = useState<"success" | "error">("success");
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
+  const [modalModoDecant, setModalModoDecant] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -186,9 +188,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     clearCartSnapshot();
   }, []);
 
-  const abrirModal = useCallback((producto: Producto) => {
+  const abrirModal = useCallback((producto: Producto, opciones?: AbrirModalOpciones) => {
     setProductoSeleccionado(producto);
+    setModalModoDecant(opciones?.modoDecant ?? false);
     setModalAbierto(true);
+  }, []);
+
+  const cerrarModal = useCallback(() => {
+    setModalAbierto(false);
+    setModalModoDecant(false);
   }, []);
 
   const value: CartContextValue = {
@@ -221,8 +229,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       <CartToast visible={toastVisible} message={toastMessage} variant={toastVariant} />
       <ProductModal
         abierto={modalAbierto}
-        cerrar={() => setModalAbierto(false)}
+        cerrar={cerrarModal}
         producto={productoSeleccionado}
+        modoDecant={modalModoDecant}
         agregarAlCarrito={agregarAlCarrito}
         comprarAhora={comprarAhora}
       />

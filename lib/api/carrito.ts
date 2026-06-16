@@ -76,7 +76,11 @@ export async function validarCarrito(
     const volumen = resolverVolumenVenta(producto, presentacionMl);
 
     const stockDb = await stockProducto(item.id);
-    const stock = stockParaVenta({ stock: stockDb, categorias: producto.categorias }, presentacionMl);
+    const stock = stockParaVenta(
+      { stock: stockDb, categorias: producto.categorias },
+      presentacionMl,
+      !!presentacionMl
+    );
     const disponible = stock >= cantidad;
     if (!disponible) {
       errores.push(

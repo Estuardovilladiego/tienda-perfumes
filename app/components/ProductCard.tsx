@@ -8,14 +8,20 @@ import type { Producto, ProductoCatalogo } from "../types/producto";
 import { IMAGEN_PLACEHOLDER, urlImagenProducto } from "@/lib/product-imagen";
 import { formatPrecioCOP } from "@/lib/format-precio";
 import {
+  esVistaDecants,
   precioDesdeDecant,
   productoEnCategoriaDecants,
   stockParaVenta,
 } from "@/lib/decants";
 
+export type AbrirModalOpciones = {
+  modoDecant?: boolean;
+};
+
 type Props = ProductoCatalogo & {
+  categoriaSlug?: string;
   agregarAlCarrito: (producto: Producto) => void;
-  abrirModal: (producto: Producto) => void;
+  abrirModal: (producto: Producto, opciones?: AbrirModalOpciones) => void;
 };
 
 export default function ProductCard({
@@ -38,11 +44,13 @@ export default function ProductCard({
   notasFondo,
   stock,
   acordesPrincipales,
+  categoriaSlug,
   agregarAlCarrito,
   abrirModal,
 }: Props) {
-  const enDecants = productoEnCategoriaDecants({ categorias });
-  const precioMostrar = enDecants ? precioDesdeDecant({ precio, nombre, categorias } as ProductoCatalogo) : precio;
+  const enCategoriaDecants = productoEnCategoriaDecants({ categorias });
+  const modoDecant = esVistaDecants(categoriaSlug) && enCategoriaDecants;
+  const precioMostrar = modoDecant ? precioDesdeDecant({ precio, nombre, categorias } as ProductoCatalogo) : precio;
 
   const producto: Producto = {
     id,
@@ -70,24 +78,24 @@ export default function ProductCard({
   const [imgSrc, setImgSrc] = useState(urlImagenProducto(imagen));
 
   const descuento =
-    !enDecants && precioAnterior && precioAnterior > precio
+    precioAnterior && precioAnterior > precio
       ? Math.round(((precioAnterior - precio) / precioAnterior) * 100)
       : null;
 
   const mostrarFuego = destacado || esNuevo;
-  const sinStock = enDecants
-    ? stockParaVenta({ stock, categorias }) <= 0
+  const sinStock = modoDecant
+    ? stockParaVenta({ stock, categorias }, null, true) <= 0
     : (stock ?? 0) <= 0;
 
   const iconBtn =
     "text-zinc-400 transition hover:text-[#ea580c] focus-visible:text-[#ea580c] outline-none";
 
-  const verProducto = () => abrirModal(producto);
+  const verProducto = () => abrirModal(producto, { modoDecant });
 
   return (
     <article className="group flex h-full flex-col overflow-hidden bg-white p-3 shadow-[0_4px_16px_rgba(0,0,0,0.08)] transition duration-300 hover:shadow-[0_6px_22px_rgba(0,0,0,0.12)] sm:p-4">
       <div className="relative">
-        {descuento !== null && (
+        {descuento !== null && !modoDecant && (
           <span className="absolute left-0 top-0 z-10 rounded-full bg-[#d97706] px-2 py-0.5 text-[10px] font-bold text-white">
             -{descuento}%
           </span>
@@ -112,8 +120,8 @@ export default function ProductCard({
       <div className="mt-3 flex items-center justify-center gap-1 sm:gap-4">
         <button
           type="button"
-          onClick={() => (enDecants ? verProducto() : agregarAlCarrito(producto))}
-          aria-label={enDecants ? "Elegir presentación" : "Agregar al carrito"}
+          onClick={() => (modoDecant ? verProducto() : agregarAlCarrito(producto))}
+          aria-label={modoDecant ? "Elegir presentación decant" : "Agregar al carrito"}
           disabled={sinStock}
           className={`tap-target flex items-center justify-center ${iconBtn} disabled:cursor-not-allowed disabled:opacity-30`}
         >
@@ -144,21 +152,21 @@ export default function ProductCard({
           </p>
         )}
         <p className="mt-0.5 text-xs font-medium text-zinc-600">
-          {enDecants ? "30 · 50 · 100 ml" : volumen}
+          {modoDecant ? "Decant · 30 · 50 · 100 ml" : volumen}
         </p>
 
         <div className="mt-2 flex justify-center">
-          <StockIndicator stock={stock} categorias={categorias} compact />
+          <StockIndicator stock={stock} categorias={categorias} vistaDecants={modoDecant} compact />
         </div>
 
         <div className="mt-2 flex flex-col items-center justify-center gap-0.5">
-          {precioAnterior != null && precioAnterior > precio && !enDecants && (
+          {precioAnterior != null && precioAnterior > precio && !modoDecant && (
             <span className="text-[10px] text-zinc-400 line-through sm:text-xs">
               $ {formatPrecioCOP(precioAnterior)}
             </span>
           )}
           <p className="text-base font-bold leading-none text-black min-[380px]:text-lg sm:text-xl">
-            {enDecants ? "Desde " : ""}$ {formatPrecioCOP(precioMostrar)}
+            {modoDecant ? "Desde " : ""}$ {formatPrecioCOP(precioMostrar)}
           </p>
         </div>
       </div>

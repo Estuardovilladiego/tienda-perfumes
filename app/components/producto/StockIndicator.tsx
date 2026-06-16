@@ -5,15 +5,23 @@ import { etiquetaStock, stockDisponible } from "@/lib/stock-display";
 type Props = {
   stock: number | undefined | null;
   categorias?: CategoriaRef[];
+  /** Solo true en la categoría Decants del catálogo. */
+  vistaDecants?: boolean;
   compact?: boolean;
   className?: string;
 };
 
-export default function StockIndicator({ stock: raw, categorias, compact, className = "" }: Props) {
+export default function StockIndicator({
+  stock: raw,
+  categorias,
+  vistaDecants = false,
+  compact,
+  className = "",
+}: Props) {
   const stockFrasco = stockDisponible(raw);
-  const enDecants = puedeVenderDecant({ categorias });
+  const enDecants = vistaDecants && puedeVenderDecant({ categorias });
   const stockVenta = enDecants
-    ? stockParaVenta({ stock: raw, categorias })
+    ? stockParaVenta({ stock: raw, categorias }, null, true)
     : stockFrasco;
 
   const label = enDecants

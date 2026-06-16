@@ -6,13 +6,15 @@ import type { Producto, ProductoCatalogo } from "../types/producto";
 
 type Props = {
   productos: ProductoCatalogo[];
+  categoriaSlug?: string;
   agregarAlCarrito: (producto: Producto) => void;
-  abrirModal: (producto: Producto) => void;
+  abrirModal: (producto: Producto, opciones?: { modoDecant?: boolean }) => void;
   vacio?: string;
 };
 
 export default function ProductGrid({
   productos,
+  categoriaSlug,
   agregarAlCarrito,
   abrirModal,
   vacio = "No hay productos en esta página",
@@ -31,6 +33,7 @@ export default function ProductGrid({
         <ProductCard
           key={producto.id}
           {...producto}
+          categoriaSlug={categoriaSlug}
           agregarAlCarrito={agregarAlCarrito}
           abrirModal={abrirModal}
         />

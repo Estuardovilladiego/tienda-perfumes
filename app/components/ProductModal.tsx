@@ -155,7 +155,7 @@ function ProductModalPanel({
       </div>
 
       <div className="pm-body">
-        <div className="pm-scroll">
+        <div className="pm-purchase">
           <header className="pm-header">
             <p className="pm-marca">{marca}</p>
             <h2 id="modal-titulo" className="pm-nombre">
@@ -218,6 +218,28 @@ function ProductModalPanel({
             </div>
           ) : null}
 
+          <footer className="pm-actions">
+            <button
+              type="button"
+              onClick={handleAgregar}
+              disabled={procesando || agotado}
+              className="pm-btn pm-btn--primary"
+            >
+              <ShoppingBag size={16} strokeWidth={1.5} />
+              {procesando ? "Agregando…" : agotado ? "No disponible" : "Añadir al carrito"}
+            </button>
+            <button
+              type="button"
+              onClick={handleComprar}
+              disabled={procesando || agotado}
+              className="pm-btn pm-btn--secondary"
+            >
+              Comprar ahora
+            </button>
+          </footer>
+        </div>
+
+        <div className="pm-scroll">
           {notas.length > 0 ? (
             <section className="pm-notas">
               <p className="pm-section-label">Notas olfativas</p>
@@ -248,26 +270,6 @@ function ProductModalPanel({
 
           {acordes?.length ? <AcordesPrincipales acordes={acordes} /> : null}
         </div>
-
-        <footer className="pm-actions">
-          <button
-            type="button"
-            onClick={handleAgregar}
-            disabled={procesando || agotado}
-            className="pm-btn pm-btn--primary"
-          >
-            <ShoppingBag size={16} strokeWidth={1.5} />
-            {procesando ? "Agregando…" : agotado ? "No disponible" : "Añadir al carrito"}
-          </button>
-          <button
-            type="button"
-            onClick={handleComprar}
-            disabled={procesando || agotado}
-            className="pm-btn pm-btn--secondary"
-          >
-            Comprar ahora
-          </button>
-        </footer>
       </div>
     </div>
   );

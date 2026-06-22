@@ -277,3 +277,95 @@ export async function eliminarPedidoAdmin(id: number) {
 
   await prisma.pedido.delete({ where: { id } });
 }
+
+/** Estados válidos para estadísticas: confirmados en adelante (excluye pendiente y cancelado). */
+const ESTADOS_VENTAS_STATS = ["confirmado", "preparando", "enviado", "entregado"] as const;
+
+export type MonthlyStatsAdmin = Awaited<ReturnType<typeof getMonthlyStatsAdmin>>;
+
+export async function getMonthlyStatsAdmin(month: number, year: number) {
+  const start = new Date(year, month - 1, 1, 0, 0, 0, 0);
+  const end = new Date(year, month, 1, 0, 0, 0, 0);
+
+  const pedidos = await prisma.pedido.findMany({
+    where: {
+      createdAt: { gte: start, lt: end },
+      estado: { in: [...ESTADOS_VENTAS_STATS] },
+    },
+    select: {
+      total: true,
+      createdAt: true,
+      items: {
+        select: {
+          productoId: true,
+          nombre: true,
+          cantidad: true,
+          precioUnitario: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const totalSales = pedidos.reduce((sum, pedido) => sum + pedido.total, 0);
+  const totalOrders = pedidos.length;
+  const averageTicket = totalOrders > 0 ? Math.round(totalSales / totalOrders) : 0;
+
+  const productMap = new Map<number, { name: string; units: number; revenue: number }>();
+
+  for (const pedido of pedidos) {
+    for (const item of pedido.items) {
+      const existing = productMap.get(item.productoId) ?? {
+        name: item.nombre,
+        units: 0,
+        revenue: 0,
+      };
+      existing.units += item.cantidad;
+      existing.revenue += item.precioUnitario * item.cantidad;
+      productMap.set(item.productoId, existing);
+    }
+  }
+
+  const topProducts = [...productMap.values()]
+    .sort((a, b) => b.units - a.units || b.revenue - a.revenue)
+    .slice(0, 5)
+    .map((product) => ({
+      name: product.name,
+      units: product.units,
+      revenue: product.revenue,
+    }));
+
+  const bestSeller = topProducts[0]
+    ? { name: topProducts[0].name, units: topProducts[0].units }
+    : { name: "—", units: 0 };
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const dailyMap = new Map<number, number>();
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    dailyMap.set(day, 0);
+  }
+
+  for (const pedido of pedidos) {
+    const day = pedido.createdAt.getDate();
+    if (day >= 1 && day <= daysInMonth) {
+      dailyMap.set(day, (dailyMap.get(day) ?? 0) + pedido.total);
+    }
+  }
+
+  const dailySales = Array.from(dailyMap.entries()).map(([day, sales]) => ({
+    day,
+    label: String(day),
+    sales,
+  }));
+
+  return {
+    month,
+    year,
+    totalSales,
+    totalOrders,
+    averageTicket,
+    bestSeller,
+    dailySales,
+    topProducts,
+  };
+}

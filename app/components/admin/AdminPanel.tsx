@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
+  BarChart3,
   Boxes,
   ChevronDown,
   ChevronUp,
@@ -26,6 +27,7 @@ import { FormEvent, Fragment, useMemo, useState } from "react";
 
 import AdminImageField, { AdminImageGalleryField } from "@/app/components/admin/AdminImageField";
 import AdminProductModal from "@/app/components/admin/AdminProductModal";
+import AdminSalesStats from "@/app/components/admin/AdminSalesStats";
 import { useAdminConfirm } from "@/app/components/admin/AdminConfirmDialog";
 import {
   AdminFieldInput,
@@ -50,11 +52,12 @@ import { formatDateTime as formatDate } from "@/lib/format-date";
 const SIDEBAR_STORAGE_KEY = "essenza-admin-sidebar";
 const PEDIDOS_POR_PAGINA = 5;
 
-type Tab = "dashboard" | "productos" | "categorias" | "inventario" | "pedidos";
+type Tab = "dashboard" | "estadisticas" | "productos" | "categorias" | "inventario" | "pedidos";
 type ApiResult<T> = { ok: boolean; data?: T; error?: string; errors?: string[] };
 
 const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "estadisticas", label: "Estadísticas de Ventas", icon: BarChart3 },
   { id: "productos", label: "Productos", icon: Package },
   { id: "categorias", label: "Categorías", icon: FolderTree },
   { id: "inventario", label: "Inventario", icon: Boxes },
@@ -168,7 +171,7 @@ async function api<T>(url: string, init?: RequestInit) {
   return json.data as T;
 }
 
-const TAB_API: Record<Tab, string> = {
+const TAB_API: Record<Exclude<Tab, "estadisticas">, string> = {
   dashboard: "/api/admin/dashboard",
   productos: "/api/admin/productos",
   categorias: "/api/admin/categorias",
@@ -296,7 +299,7 @@ export default function AdminPanel({
     setTab(next);
   }
 
-  async function reloadPanels(targets: Tab[]) {
+  async function reloadPanels(targets: Exclude<Tab, "estadisticas">[]) {
     const unique = [...new Set(targets)];
     const pairs = await Promise.all(
       unique.map(async (target) => [target, await api(TAB_API[target])] as const)
@@ -311,7 +314,7 @@ export default function AdminPanel({
     }
   }
 
-  async function refresh(target: Tab = tab) {
+  async function refresh(target: Exclude<Tab, "estadisticas"> = tab === "estadisticas" ? "dashboard" : tab) {
     setLoading(true);
     setError("");
     try {
@@ -621,6 +624,8 @@ export default function AdminPanel({
               <RecentOrders pedidos={dashboard.ultimosPedidos || []} />
             </div>
           )}
+
+          {tab === "estadisticas" && <AdminSalesStats />}
 
           {tab === "productos" && (
             <>

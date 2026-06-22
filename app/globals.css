@@ -1144,6 +1144,135 @@ body {
   }
 }
 
+.admin-stat-grid-4 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .admin-stat-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .admin-stat-grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.admin-stats-panel {
+  animation: admin-stats-fade-in 0.35s ease;
+}
+
+@keyframes admin-stats-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.admin-stats-toolbar {
+  padding: var(--admin-space-xl);
+}
+
+.admin-stats-period {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--admin-space-sm);
+  margin-top: var(--admin-space-lg);
+}
+
+.admin-stats-selectors {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--admin-space-sm);
+}
+
+.admin-stats-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--admin-space-xs);
+  color: var(--admin-muted);
+}
+
+.admin-stats-nav {
+  min-width: 2.5rem;
+  justify-content: center;
+  padding-inline: 0.75rem;
+}
+
+.admin-stats-kpi-hint {
+  margin-top: var(--admin-space-xs);
+  font-size: 0.75rem;
+  color: rgb(107 107 107 / 0.9);
+}
+
+.admin-stats-kpi-value-compact {
+  font-size: 1.125rem !important;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.admin-stats-loading,
+.admin-stats-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--admin-space-md);
+  padding: var(--admin-space-3xl) var(--admin-space-xl);
+  text-align: center;
+  color: var(--admin-muted);
+}
+
+.admin-stats-chart-card {
+  padding: var(--admin-space-xl);
+}
+
+.admin-stats-chart-wrap {
+  margin-top: var(--admin-space-md);
+  min-height: 320px;
+}
+
+.admin-stats-tooltip {
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-md);
+  background: var(--admin-surface-elevated);
+  box-shadow: var(--admin-shadow-md);
+  padding: var(--admin-space-sm) var(--admin-space-md);
+}
+
+.admin-stats-tooltip-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--admin-muted);
+}
+
+.admin-stats-tooltip-value {
+  margin-top: 0.125rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--admin-ink);
+}
+
+.admin-shell .recharts-cartesian-grid-horizontal line,
+.admin-shell .recharts-cartesian-grid-vertical line {
+  stroke: rgb(196 165 116 / 0.15);
+}
+
+.admin-shell .recharts-text {
+  fill: var(--admin-muted);
+}
+
 .admin-split-layout {
   display: grid;
   gap: var(--admin-space-2xl);

@@ -1,6 +1,6 @@
 import { site } from "@/lib/site";
 
-export const TITULAR_CUENTAS_PAGO = "Cielo Luz Avilez Salgado";
+export const TITULAR_CUENTAS_PAGO = "Frank Junior Rojano Garzon";
 
 /** Nombre del titular de Nequi, Daviplata, Bancolombia, Falabella, etc. */
 export function nombreTitularCuentas() {
